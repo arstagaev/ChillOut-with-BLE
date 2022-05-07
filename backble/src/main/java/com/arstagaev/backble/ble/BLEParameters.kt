@@ -1,4 +1,4 @@
-package com.arstagaev.chilloutble.ble
+package com.arstagaev.backble.ble
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic

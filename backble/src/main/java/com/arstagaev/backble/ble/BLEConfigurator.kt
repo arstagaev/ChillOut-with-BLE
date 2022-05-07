@@ -1,10 +1,10 @@
 package com.arstagaev.backble.ble
 
-import com.arstagaev.chilloutble.ble.BLEParameters.CCC_DESCRIPTOR_UUID
-import com.arstagaev.chilloutble.ble.BLEParameters.CHARACTERISTIC_UUID_1
-import com.arstagaev.chilloutble.ble.BLEParameters.SCAN_PERIOD
-import com.arstagaev.chilloutble.ble.BLEParameters.TRACKING_ADVERTISING
-import com.arstagaev.chilloutble.ble.BLEParameters.WITH_NOTIFY
+import com.arstagaev.backble.ble.BLEParameters.CCC_DESCRIPTOR_UUID
+import com.arstagaev.backble.ble.BLEParameters.CHARACTERISTIC_UUID_1
+import com.arstagaev.backble.ble.BLEParameters.SCAN_PERIOD
+import com.arstagaev.backble.ble.BLEParameters.TRACKING_ADVERTISING
+import com.arstagaev.backble.ble.BLEParameters.WITH_NOTIFY
 
 
 class BLEConfigurator private constructor(builder: Builder) {

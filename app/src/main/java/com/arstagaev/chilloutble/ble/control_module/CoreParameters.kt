@@ -20,8 +20,6 @@ object CoreParameters {
     var RECORD_ACTIVITY_FOR_RAWPARSER : Class<*>?        = null
 
     var TIME_OF_TRIP = -1 // -1, I set, for check if we get first byte , like start of trip
-    /**
-     *  CHARTS
-     */
-    var TRINITY_FOR_CHART = FourthlyDataContainerForChartsXYZ2("~",0f,0f,0f)
+
+
 }

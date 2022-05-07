@@ -10,27 +10,27 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
 import androidx.core.content.getSystemService
-import com.arstagaev.chilloutble.ble.BLEParameters.ACTION_GATT_CONNECTED
-import com.arstagaev.chilloutble.ble.BLEParameters.ACTION_GATT_DISCONNECTED
-import com.arstagaev.chilloutble.ble.BLEParameters.ACTION_GATT_SERVICES_DISCOVERED
-import com.arstagaev.chilloutble.ble.BLEParameters.BLE_STATUS
-import com.arstagaev.chilloutble.ble.BLEParameters.CONNECTED_DEVICE
-import com.arstagaev.chilloutble.ble.BLEParameters.STATE_NOW_SERVICE
-import com.arstagaev.chilloutble.ble.BLEParameters.MSG
-import com.arstagaev.chilloutble.ble.BLEParameters.TARGET_PART_OF_NAME
-import com.arstagaev.chilloutble.ble.BLEParameters.TRACKED_BLE_DEVICE
-import com.arstagaev.chilloutble.ble.BLEParameters.TRACKED_NAME_OF_BLE_DEVICE
-import com.arstagaev.chilloutble.ble.BLEParameters.scanResultsX
+import com.arstagaev.backble.ble.BLEParameters.ACTION_GATT_CONNECTED
+import com.arstagaev.backble.ble.BLEParameters.ACTION_GATT_DISCONNECTED
+import com.arstagaev.backble.ble.BLEParameters.ACTION_GATT_SERVICES_DISCOVERED
+import com.arstagaev.backble.ble.BLEParameters.BLE_STATUS
+import com.arstagaev.backble.ble.BLEParameters.CONNECTED_DEVICE
+import com.arstagaev.backble.ble.BLEParameters.STATE_NOW_SERVICE
+import com.arstagaev.backble.ble.BLEParameters.MSG
+import com.arstagaev.backble.ble.BLEParameters.TARGET_PART_OF_NAME
+import com.arstagaev.backble.ble.BLEParameters.TRACKED_BLE_DEVICE
+import com.arstagaev.backble.ble.BLEParameters.TRACKED_NAME_OF_BLE_DEVICE
+import com.arstagaev.backble.ble.BLEParameters.scanResultsX
 import com.arstagaev.backble.ble.enums.StateOfService
 import com.arstagaev.backble.ble.models.ScannedDevice
 import com.arstagaev.backble.core.CoreParameters.TIME_OF_TRIP
-import com.arstagaev.chilloutble.ble.BLEParameters
 import com.arstagaev.backble.gentelman_kit.bytesToHex
 import com.arstagaev.chilloutble.utils.toastShow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
@@ -99,7 +99,8 @@ abstract class BLEManager(ctx : Context)  {
            // Log.i("www","www ${result.device.name}  || [${result.device.address}]")
             //Log.i(TAG,"onScanResult: ${scanResultsX.size}")
 
-            val indexQuery = scanResultsX.indexOfFirst { it.bt.address == result.device.address }
+            val indexQuery = scanResultsX.indexOfFirst {
+                it.bt.address == result.device.address }
             /** A scan result already exists with the same address */
             if (indexQuery != -1) {
                 // for closest connect
@@ -227,7 +228,9 @@ abstract class BLEManager(ctx : Context)  {
                 TIME_OF_TRIP = 0
                 //NEED_RESET = false
             }
-
+    //            asd = flow {
+    //                emit()
+    //            }
             receivingRawData = characteristic.value
             //WritingToFile().router(receivingRawData!!)
 
@@ -236,6 +239,7 @@ abstract class BLEManager(ctx : Context)  {
             STATE_NOW_SERVICE = StateOfService.NOTIFYING_OR_INDICATING
         }
     }
+    var asd : Flow<Int> = emptyFlow()
 
     val job = CoroutineScope(Dispatchers.Main).launch {
 
