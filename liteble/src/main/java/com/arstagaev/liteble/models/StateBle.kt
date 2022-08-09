@@ -1,6 +1,6 @@
-package com.arstagaev.backble.ble.enums
+package com.arstagaev.liteble.models
 
-enum class StateOfService(s: String) {
+enum class StateBle(s: String) {
     INIT("init"),
 
     NEUTRAL("neutral"),

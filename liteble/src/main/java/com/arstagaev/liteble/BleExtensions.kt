@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.arstagaev.backble.ble
+package com.arstagaev.liteble
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt

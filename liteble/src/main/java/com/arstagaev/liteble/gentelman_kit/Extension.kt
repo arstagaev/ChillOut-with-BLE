@@ -1,4 +1,4 @@
-package com.arstagaev.chilloutble.gentelman_kit
+package com.arstagaev.liteble.gentelman_kit
 
 import android.app.Activity
 import android.bluetooth.BluetoothGattCharacteristic

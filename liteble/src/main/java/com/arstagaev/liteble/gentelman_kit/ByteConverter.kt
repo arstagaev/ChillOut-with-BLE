@@ -1,4 +1,4 @@
-package com.arstagaev.chilloutble.gentelman_kit
+package com.arstagaev.liteble.gentelman_kit
 
 private val HEX_ARRAY = "0123456789ABCDEF".toCharArray()
 
