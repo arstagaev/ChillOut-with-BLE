@@ -2,8 +2,7 @@ package com.arstagaev.chilloutble
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
+import android.bluetooth.*
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
@@ -48,6 +47,19 @@ class MainActivity : ComponentActivity() {
         bluetoothManager = getSystemService(BluetoothManager::class.java)
         btAdapter = bluetoothManager.getAdapter()
         bluetoothLeScanner = btAdapter!!.bluetoothLeScanner
+
+
+        val bleActions = BleActions(this)
+
+        bleActions.bluetoothGattCallback =  object : BluetoothGattCallback() {
+            override fun onCharacteristicChanged(
+                gatt: BluetoothGatt?,
+                characteristic: BluetoothGattCharacteristic?
+            ) {
+                super.onCharacteristicChanged(gatt, characteristic)
+
+            }
+        }
 
         requestPermission(Manifest.permission.BLUETOOTH_CONNECT,4)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
