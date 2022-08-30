@@ -22,9 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.arstagaev.chilloutble.ui.theme.ChillOutBLETheme
-import com.arstagaev.liteble.BleActions
-import com.arstagaev.liteble.BleParameters
-import com.arstagaev.liteble.gentelman_kit.requestPermission
+import com.arstagaev.flowble.BLEStarter
+import com.arstagaev.flowble.BleActions
+import com.arstagaev.flowble.BleOperations
+import com.arstagaev.flowble.BleParameters
+import com.arstagaev.flowble.gentelman_kit.requestPermission
 import com.arstagaev.liteble.models.ScannedDevice
 import kotlinx.coroutines.*
 
@@ -49,17 +51,20 @@ class MainActivity : ComponentActivity() {
         bluetoothLeScanner = btAdapter!!.bluetoothLeScanner
 
 
-        val bleActions = BleActions(this)
-
-        bleActions.bluetoothGattCallback =  object : BluetoothGattCallback() {
-            override fun onCharacteristicChanged(
-                gatt: BluetoothGatt?,
-                characteristic: BluetoothGattCharacteristic?
-            ) {
-                super.onCharacteristicChanged(gatt, characteristic)
-
-            }
+        //val bleActions = BleActions(this)
+        val bleStarter = BLEStarter(this)
+        bleStarter.letsGO()
+        GlobalScope.launch {
+            BLEStarter.shared_1.emit(mutableListOf(
+                BleOperations.CONNECT,
+                BleOperations.DELAY.also { it.duration = 1000 },
+                BleOperations.DELAY.also { it.duration = 1000 },
+                BleOperations.DELAY.also { it.duration = 1000 },
+                BleOperations.DISCONNECT.also { it.duration = 1000 }
+            ))
         }
+
+
 
         requestPermission(Manifest.permission.BLUETOOTH_CONNECT,4)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

@@ -23,5 +23,5 @@ object CoreParameters {
     /**
      *  CHARTS
      */
-    var TRINITY_FOR_CHART = FourthlyDataContainerForChartsXYZ2("~",0f,0f,0f)
+    //var TRINITY_FOR_CHART = FourthlyDataContainerForChartsXYZ2("~",0f,0f,0f)
 }

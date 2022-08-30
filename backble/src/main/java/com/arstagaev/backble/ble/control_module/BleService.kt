@@ -12,6 +12,7 @@ import android.os.*
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import com.arstagaev.backble.R
 import com.arstagaev.backble.ble.BLEParameters.ACTION_NOW_SERVICE
 import com.arstagaev.backble.ble.BLEParameters.CONNECTED_DEVICE
 import com.arstagaev.backble.ble.BLEParameters.CURRENT_SERVICE_CONNECT_STYLE
@@ -26,7 +27,6 @@ import com.arstagaev.backble.ble.enums.StyleOfConnect
 import com.arstagaev.backble.core.CoreParameters.RECORD_ACTIVITY
 import com.arstagaev.backble.core.CoreParameters.STARTING_DELAY
 import com.arstagaev.backble.core.CoreParameters.TIME_OF_TRIP
-import com.arstagaev.chilloutble.R
 import com.arstagaev.backble.ble.BLEActions
 import com.arstagaev.chilloutble.ble.control_module.enum.ActionOfService
 import com.arstagaev.backble.gentelman_kit.bytesToHex
@@ -285,9 +285,11 @@ class BleService : Service() {
                             }
                             StateOfService.NOTIFYING_OR_INDICATING -> { // receive/parse data
                             }
+                            else -> {}
                         }
                     }
                     ////////////////////////
+                    else -> {}
                 }
 
                 delay(1000)
@@ -336,6 +338,7 @@ class BleService : Service() {
                 Log.i(TAG,"after startScan and try connect ${scanResultsX.joinToString()}")
             }
             StyleOfConnect.BY_BOND -> {  }
+            else -> {}
         }
     }
 
@@ -535,11 +538,11 @@ class BleService : Service() {
             .setContentTitle("Smart Insurance. AVTelma")
             .setContentText("\uD83D\uDD34 Working..")
             .setContentIntent(pendingIntent)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            //.setSmallIcon(R.drawable.)
             //.setTicker("Ticker text")
             .setPriority(NotificationCompat.PRIORITY_LOW) // for under android 26 compatibility
             .setOnlyAlertOnce(true) // ATTENTION!!!
-            .addAction(R.drawable.ic_launcher_foreground,"stop",actionIntent)
+            //.addAction(R.drawable.ic_launcher_foreground,"stop",actionIntent)
 
             .build()
     }

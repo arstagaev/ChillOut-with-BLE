@@ -15,5 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "ChillOutBLE"
 include ':app'
 include ':backble'
-include ':liteble'
 include ':flowble'

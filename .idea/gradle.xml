@@ -13,7 +13,6 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/backble" />
             <option value="$PROJECT_DIR$/flowble" />
-            <option value="$PROJECT_DIR$/liteble" />
           </set>
         </option>
       </GradleProjectSettings>
