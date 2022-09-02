@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.core.content.getSystemService
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_CONNECTED
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_DISCONNECTED
+import com.arstagaev.flowble.BleParameters.GATT_SERVICES
 import com.arstagaev.flowble.gentelman_kit.bytesToHex
 import com.arstagaev.flowble.models.StateBle
 
@@ -101,7 +102,8 @@ open class BleManager(
                 //broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
 
                 Log.w("www", "onServicesDiscovered received:  $status  GATT_SUCCESS")
-                //displayGattServices(gatt?.services)
+
+                //GATT_SERVICES = getSupportedGattServices() as List<BluetoothGattService>?
                 BleParameters.GATT_SERVICES = gatt?.services as List<BluetoothGattService>?
 
             } else {

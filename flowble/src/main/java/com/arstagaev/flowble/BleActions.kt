@@ -2,33 +2,53 @@ package com.arstagaev.flowble
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
-import android.bluetooth.BluetoothProfile
-import android.bluetooth.le.BluetoothLeScanner
-import android.bluetooth.le.ScanCallback
+import android.app.Activity
+import android.bluetooth.*
 import android.bluetooth.le.ScanSettings
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.arstagaev.flowble.BLEStarter.Companion.outputBytesRead
+import com.arstagaev.flowble.BleParameters.CONNECTED_DEVICE
+import com.arstagaev.flowble.BleParameters.GATT_SERVICES
 import com.arstagaev.flowble.BleParameters.SCAN_FILTERS
 import com.arstagaev.flowble.BleParameters.STATE_BLE
 import com.arstagaev.flowble.BleParameters.TARGET_CHARACTERISTIC
 import com.arstagaev.flowble.models.StateBle
+import kotlinx.coroutines.delay
 import java.util.*
 
 class BleActions(
     ctx: Context? = null,
 ) : BleManager(ctx) {
 
-
     private val TAG = BleActions::class.qualifiedName
     private var scanning = false
+    var activity: Activity? = null
+
 
     init {
         internalContext = ctx
+
+    }
+
+    fun checkBt(
+        //activity: Activity? = null
+    ) {
+        if (activity != null && !btAdapter.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            if (ActivityCompat.checkSelfPermission(
+                    activity!!,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
+            activity!!.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -79,48 +99,47 @@ class BleActions(
     }
 
     @SuppressLint("MissingPermission")
-    protected fun enableNotifications(characteristic: BluetoothGattCharacteristic) {
+    fun enableNotifications(uuid: UUID): Boolean {
 
-//        if (bluetoothGatt?.setCharacteristicNotification(characteristic, true) == false) {
-//            Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
-//            return
-//        }else {
-//            TARGET_CHARACTERISTIC = characteristic
-//        }
         Log.w(TAG,"enableNotifications()()()()()()")
-        Log.w("wcwc","wcwc characteristic.uuid -> ${characteristic.uuid.toString()} <-")
-        Log.w("wcwc","wcwc characteristic.uuid -> ${characteristic.descriptors.size} <-")
-        characteristic.descriptors.forEach {
-            Log.w("wcwc","wcwc isUUID-> ${(it.uuid)} <-")
-            //Log.w("wcwc","wcwc isCccd-> ${(it.)} <-")
 
-            //Log.w("wcwc","wcwc isCccd-> ${(it.())} <-")
-        }
+        bluetoothGatt?.findCharacteristic(uuid)?.let { characteristic ->
+            val cccdUuid = UUID.fromString(CCC_DESCRIPTOR_UUID)
+            val payload = when {
+                characteristic.isIndicatable() ->
+                    BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                characteristic.isNotifiable() ->
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                else -> {
+                    error("${characteristic.uuid} doesn't support notifications/indications")
+                    return false
+                }
 
-        val cccdUuid = characteristic.descriptors[0].uuid ?: UUID.fromString(BleParameters.CCC_DESCRIPTOR_UUID)
-        val payload = when {
-            characteristic.isIndicatable() -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
-            characteristic.isNotifiable() -> BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-            else -> {
-                Log.e("ConnectionManager", "${characteristic.uuid} doesn't support notifications/indications")
-                return
             }
-        }
 
-        characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
-            if (bluetoothGatt?.setCharacteristicNotification(characteristic, true) == false) {
-                Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
-                return
-            }else {
-                TARGET_CHARACTERISTIC = characteristic
+            characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+                if (!bluetoothGatt?.setCharacteristicNotification(characteristic, true)!!) {
+                    Log.e(TAG,"setCharacteristicNotification failed for ${characteristic.uuid}")
+                    //signalEndOfOperation()
+                    return false
+                }
+
+                cccDescriptor.value = payload
+                bluetoothGatt?.writeDescriptor(cccDescriptor)
+                return true
+            } ?: internalContext.run {
+                Log.e(TAG,"${characteristic.uuid} doesn't contain the CCC descriptor!")
+                //signalEndOfOperation()
             }
-            writeDescriptor(cccDescriptor, payload)
-        } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
-
+        } ?: internalContext.run {
+            Log.e(TAG,"Cannot find $uuid! Failed to enable notifications.")
+            //signalEndOfOperation()
+        }
+        return false
     }
 
     @SuppressLint("MissingPermission")
-    protected fun disableNotifications(characteristic: BluetoothGattCharacteristic) {
+    fun disableNotifications(characteristic: BluetoothGattCharacteristic) {
         if (characteristic == null) {
             Log.e("ccc","characteristic == null !!!")
             return
@@ -172,9 +191,9 @@ class BleActions(
 
 
     @SuppressLint("MissingPermission")
-    fun startScan() {
+    fun startScan(): Boolean {
         if (scanning)
-            return
+            return true
 
         Log.w(TAG,"SCAN_FILTERS: ${SCAN_FILTERS.joinToString()}   Filters isNotEmpty ${SCAN_FILTERS.isNotEmpty()}")
 
@@ -182,7 +201,7 @@ class BleActions(
             //delay(3000)
             Log.w(TAG,"BT ADAPTER IS NULL!!")
             print("BTADPRTER is NULL!!!")
-            return
+            return false
         }
 
         Log.w(TAG," ${bluetoothLeScanner.toString()}")
@@ -195,6 +214,7 @@ class BleActions(
 //        }
         bluetoothLeScanner?.startScan(null,scanSettings,leScanCallback)
         scanning = true
+        return scanning
     }
 
 
@@ -202,13 +222,129 @@ class BleActions(
 
 
     @SuppressLint("MissingPermission")
-    suspend fun stopScan() {
+    suspend fun stopScan(): Boolean {
         if (!scanning)
-            return
+            return false
         Log.i(TAG,"Stop scan")
         bluetoothLeScanner?.stopScan(leScanCallback)
         scanning = false
+
+        return true
     }
 
+
+    @SuppressLint("MissingPermission")
+    fun readCharacteristic(
+        uuid: UUID,
+    ) : Boolean {
+        if (uuid == null) return false
+        val characteristicTarget = bluetoothGatt?.findCharacteristic(uuid = uuid)//getCharacteristic(uuid) ?: return false
+
+        return if (characteristicTarget?.value != null) {
+            outputBytesRead.value = characteristicTarget.value
+            true
+        }else {
+            false
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun writeCharacteristic(
+        uuid: UUID,
+        payload: ByteArray
+    ): Boolean {
+        if (uuid == null) return false
+        val characteristicTarget = bluetoothGatt?.findCharacteristic(uuid = uuid)//getCharacteristic(uuid) ?: return false
+
+        if (CONNECTED_DEVICE == null && characteristicTarget == null) {
+            return false
+        }
+
+        val writeType = when {
+            characteristicTarget!!.isWritable() -> BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            characteristicTarget.isWritableWithoutResponse() -> BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+            else -> {
+                Log.e("ccc","Characteristic ${characteristicTarget?.uuid} cannot be written to")
+                return false
+            }
+        }
+
+        characteristicTarget.let { characteristic ->
+            characteristic.writeType = writeType
+            characteristic.value = payload
+            bluetoothGatt!!.writeCharacteristic(characteristic)
+        } ?: internalContext.run {
+            Log.e("","Cannot find  to write to")
+        }
+        return true
+    }
+
+//    fun getCharacteristic(uuid: UUID): BluetoothGattCharacteristic?{
+//        GATT_SERVICES?.forEachIndexed { index, bluetoothGattService ->
+//            var a = bluetoothGattService.getCharacteristic(uuid)
+//            if (a != null && a.uuid == uuid) {
+//                println(" I FOUND CHARACTERISTIC: ${a.uuid.toString()}")
+//                return a
+//            }
+//        }
+////        if (GATT_SERVICES != null) {
+////            for (i  in 0 until GATT_SERVICES.size) {
+////                for (z in 0 until BleParameters.GATT_SERVICES[i].characteristics.size) {
+////                    if (BleParameters.GATT_SERVICES[i].characteristics[z].uuid == uuid) {
+////                        println(" I FOUND CHARACTERISTIC: ${BleParameters.GATT_SERVICES[i].characteristics[z].uuid.toString()}")
+////                        return BleParameters.GATT_SERVICES[i].characteristics[z]
+////                    }
+////                }
+////            }
+////        }
+//
+//        println(" I DONT FOUND CHARACTERISTIC:")
+//        return null
+//    }
+
+    @SuppressLint("MissingPermission")
+    fun disconnectFromDevice(): Boolean {
+        Log.w(TAG,"disconnectFromDevice()()()()()()()")
+//        if (ActivityCompat.checkSelfPermission(
+//                internalContext!!,
+//                Manifest.permission.BLUETOOTH_CONNECT
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            return
+//        }
+        //toastShow("Disconnecting ..",internalContext!!)
+        if (bluetoothGatt != null){
+            bluetoothGatt?.close()
+            bluetoothGatt?.disconnect()
+            bluetoothGatt = null
+            Log.w(TAG," disconnected FromDevice !!! ")
+        }else {
+            Log.w(TAG," bluetoothGatt is NULL ")
+        }
+
+        return false
+    }
+    suspend fun disableBLEManager() {
+        //updateNotificationFlow.cancellable()
+
+
+        if (TARGET_CHARACTERISTIC != null) {
+            disableNotifications(TARGET_CHARACTERISTIC!!)
+        }
+        stopScan()
+        delay(10L)
+        disconnectFromDevice()
+        delay(30)
+//        if (gattUpdateReceiver != null) {
+//            internalContext?.unregisterReceiver(gattUpdateReceiver)
+//        }
+        Log.w(TAG," disableBLEManager !!! ")
+        Log.w(TAG," disableBLEManager !!! ")
+        Log.w(TAG," disableBLEManager !!! ")
+    }
+
+    companion object {
+        private const val REQUEST_ENABLE_BT = 1
+    }
 
 }

@@ -1,8 +1,13 @@
 package com.arstagaev.flowble
 
+import java.util.*
+
 enum class BleOperations(
     var macAddress: String? = null,
-    var duration: Long? = null
+    var uuid: UUID? = null,
+    var duration: Long? = null,
+    var isEnable: Boolean? = null,
+    var byteArray: ByteArray? = null
 ) {
     START_SCAN(""),
     STOP_SCAN(""),
@@ -22,4 +27,5 @@ enum class BleOperations(
     GET_BATTERY_LEVEL(""),
 
     DELAY(""),
+    FULL_STOP(),
 }

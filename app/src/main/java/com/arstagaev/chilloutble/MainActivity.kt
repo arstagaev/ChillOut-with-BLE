@@ -2,6 +2,7 @@ package com.arstagaev.chilloutble
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.*
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
@@ -62,6 +63,13 @@ class MainActivity : ComponentActivity() {
                 BleOperations.DELAY.also { it.duration = 1000 },
                 BleOperations.DISCONNECT.also { it.duration = 1000 }
             ))
+            BLEStarter.shared_1.emit(mutableListOf(
+                BleOperations.CONNECT,
+                BleOperations.DELAY.also { it.duration = 1000 },
+                BleOperations.DELAY.also { it.duration = 1000 },
+                BleOperations.DELAY.also { it.duration = 1000 },
+                BleOperations.DISCONNECT.also { it.duration = 1000 }
+            ))
         }
 
 
@@ -104,10 +112,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
+        frop(this)
         //scanLeDevice()
         //bluetoothLeScanner.startScan(leScanCallback)
     }
+
+    private fun frop(activity: Activity) {
+        TODO("Not yet implemented")
+    }
+
     private lateinit var bluetoothLeScanner :BluetoothLeScanner
     private var scanning = false
     private val handler = Handler()
