@@ -53,9 +53,7 @@ open class BleManager(
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             BleParameters.BLE_STATUS = status
             Log.w("bleble","gatt status:${BleParameters.BLE_STATUS} \n${gatt?.printGattTable()} <<|")
-            //toastShow("status=${BLE_STATUS}",internalContext!!)
             arrayListOf<BleOperations>(BleOperations.DELAY)
-
 
             when(status) {
                 //0 ->  { NEED_RESET = false }

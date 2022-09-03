@@ -1,7 +1,9 @@
 package com.arstagaev.flowble
 
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.le.ScanResult
 import android.content.Context
+import com.arstagaev.liteble.models.ScannedDevice
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -11,7 +13,7 @@ import kotlinx.coroutines.flow.collectIndexed
 class BLEStarter(ctx : Context) {
     private val TAG = "BLEStarter"
     var bleActions: BleActions? = null
-
+    private var lastSuccess = false
     init {
         observer()
         bleActions = BleActions(ctx)
@@ -24,7 +26,14 @@ class BLEStarter(ctx : Context) {
 
                     operation.forEachIndexed { index, bleOperations ->
                         println(">>> start operation[ ${bleOperations.name}")
-                        selector(bleOperations)
+                        lastSuccess = selector(bleOperations) ?: false
+
+                        // force waiting finish of operation
+                        while (!lastSuccess) {
+                            lastSuccess = selector(bleOperations) ?: false
+                            delay(1000)
+                        }
+
                     }
                     println(">>> end operation ]")
 
@@ -71,10 +80,10 @@ class BLEStarter(ctx : Context) {
                 return bleActions?.enableNotifications(uuid = operation.uuid!!)
             }
             BleOperations.DISABLE_NOTIFY_INDICATE -> {
-                return
+                return bleActions?.disableNotifications(uuid = operation.uuid!!)
             }
             BleOperations.GET_BATTERY_LEVEL -> {
-
+                return false
             }
             BleOperations.FULL_STOP -> {
                 bleActions?.disableBLEManager()
@@ -89,6 +98,9 @@ class BLEStarter(ctx : Context) {
 
     companion object {
         var shared_1 = MutableSharedFlow<MutableList<BleOperations>>(5,0, BufferOverflow.SUSPEND)
+
+        var scanDevices = MutableStateFlow(arrayListOf<ScannedDevice>())
+
         var outputBytes = MutableStateFlow(byteArrayOf())
         var outputBytesRead = MutableStateFlow(byteArrayOf())
         var servicesCharacteristics = MutableStateFlow<List<BluetoothGattCharacteristic>>(listOf())

@@ -1,23 +1,24 @@
 package com.arstagaev.flowble
 
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.le.ScanFilter
 import com.arstagaev.liteble.models.ScannedDevice
 import com.arstagaev.flowble.models.StateBle
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.util.*
+import kotlin.collections.ArrayList
 
 object BleParameters {
     var STATE_BLE = StateBle.INIT
 
-    var scanResults  = MutableStateFlow<ArrayList<ScannedDevice>>(arrayListOf())
+    var scanResultsX  = MutableStateFlow<ArrayList<ScannedDevice>>(arrayListOf())
     var SCAN_FILTERS = mutableListOf<ScanFilter>()
     var GATT_SERVICES :  List<BluetoothGattService>? = null
 
     var operationQueue = ArrayList<BleOperations>()
 
-    var TARGET_CHARACTERISTIC : BluetoothGattCharacteristic? = null
+    var TARGET_CHARACTERISTIC_NOTIFY : UUID? = null
 
     var CHARACTERISTIC_UUID_1 = "zero" // need to setup
     var CHARACTERISTIC_UUID_2 = "zero" // need to setup
