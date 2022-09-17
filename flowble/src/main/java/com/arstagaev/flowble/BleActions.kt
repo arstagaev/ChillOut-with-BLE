@@ -142,16 +142,14 @@ class BleActions(
 
                 }.await()
 
-                //Log.i(TAG,">> >> Type of device: ${device.type}  isNull:${bluetoothGatt?.services?.size ?: null} conn stat: ${bluetoothGatt?.getConnectionState(device) ?: null}  BLE Status: ${BLE_STATUS}")
+                // check we connected or not
                 var a = bluetoothManager?.getConnectedDevices(BluetoothProfile.GATT)
 
                 logWarning("111 ${a?.joinToString() ?: "null"}  isNull:${bluetoothGatt?.services?.size ?: null}    disk${bluetoothGatt?.discoverServices()}")
-                val connectedDevice = a?.find { it.address == address }
 
                 // if device don't found
-                if (BLE_STATUS == 133 || connectedDevice == null) {
-                    return false
-                }
+                val connectedDevice = a?.find { it.address == address } ?: return false
+
 
                 return true
             } catch (exception: IllegalArgumentException) {

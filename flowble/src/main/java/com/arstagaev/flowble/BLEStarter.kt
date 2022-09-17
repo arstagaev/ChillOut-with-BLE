@@ -47,7 +47,7 @@ class BLEStarter(ctx : Context) {
                         println(">>> start operation[ ${bleOperations.toString()}")
                         lastSuccess = selector(bleOperations) ?: false
 
-                        if (!lastSuccess) {
+                        if (!lastSuccess && bleOperations.isImportant) {
                             // force waiting finish of operation
                             while (!lastSuccess) {
 

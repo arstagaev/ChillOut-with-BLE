@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
                 BLEStarter.shared_1.emit(mutableListOf(
                     StartScan(),
                     Delay(6000L),
-                    Connect("44:44:44:44:44:0C", isImportant = true),
+                    Connect("44:44:44:44:44:0C", isImportant = false),
                     StopScan()
                     //BleOperations.DELAY.also { it.duration = 1000 },
                 ))
