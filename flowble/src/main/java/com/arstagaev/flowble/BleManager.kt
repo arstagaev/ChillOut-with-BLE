@@ -6,11 +6,16 @@ import android.content.Context
 import android.content.IntentFilter
 import android.util.Log
 import androidx.core.content.getSystemService
+import com.arstagaev.flowble.BLEStarter.Companion.outputBytesNotifyIndicate
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_CONNECTED
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_DISCONNECTED
 import com.arstagaev.flowble.enums.BleOperations_2
 import com.arstagaev.flowble.gentelman_kit.bytesToHex
+import com.arstagaev.flowble.gentelman_kit.logWarning
 import com.arstagaev.flowble.models.StateBle
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 open class BleManager(
     ctx : Context? = null,
@@ -117,10 +122,11 @@ open class BleManager(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
-
-            //MSG = bytesToHex(characteristic.value)
-            //Log.w("www", "state:  $CURRENT_SERVICE_STATE  NOTIFYING_OR_INDICATING ")
-            Log.w("www","www >>> ${bytesToHex(characteristic.value)}<<")
+            //logWarning(" PAYLOAD -> ${bytesToHex(characteristic.value)}")
+            //Log.w("www","www >>> ${bytesToHex(characteristic.value)}<<")
+            CoroutineScope(CoroutineName("onCharacteristicChanged")).launch {
+                outputBytesNotifyIndicate.emit(characteristic.value)
+            }
 
 //        if (receivingRawData?.get(0) == firstByteStart) {
 //

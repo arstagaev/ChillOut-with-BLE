@@ -23,6 +23,7 @@ import com.arstagaev.flowble.BleParameters.STATE_BLE
 import com.arstagaev.flowble.BleParameters.TARGET_CHARACTERISTIC_NOTIFY
 import com.arstagaev.flowble.BleParameters.scanResultsX
 import com.arstagaev.flowble.gentelman_kit.hasPermission
+import com.arstagaev.flowble.gentelman_kit.logAction
 import com.arstagaev.flowble.gentelman_kit.logError
 import com.arstagaev.flowble.gentelman_kit.logWarning
 import com.arstagaev.flowble.models.StateBle
@@ -168,7 +169,8 @@ class BleActions(
         Log.w(TAG,"enableNotifications()()()()()()")
 
         bluetoothGatt?.findCharacteristic(uuid)?.let { characteristic ->
-            val cccdUuid = UUID.fromString(CCC_DESCRIPTOR_UUID)
+            val cccdUuid = characteristic.descriptors[0].uuid ?: UUID.fromString(CCC_DESCRIPTOR_UUID)
+
             val payload = when {
                 characteristic.isIndicatable() ->
                     BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
@@ -191,6 +193,7 @@ class BleActions(
                 cccDescriptor.value = payload
                 bluetoothGatt?.writeDescriptor(cccDescriptor)
                 TARGET_CHARACTERISTIC_NOTIFY = uuid
+                logAction("Success Enable Notification !! ")
                 return true
             } ?: internalContext.run {
                 Log.e(TAG,"${characteristic.uuid} doesn't contain the CCC descriptor!")
@@ -504,9 +507,9 @@ class BleActions(
         //updateNotificationFlow.cancellable()
 
 
-        if (TARGET_CHARACTERISTIC_NOTIFY != null) {
-            disableNotifications(TARGET_CHARACTERISTIC_NOTIFY!!)
-        }
+//        if (TARGET_CHARACTERISTIC_NOTIFY != null) {
+//            disableNotifications(TARGET_CHARACTERISTIC_NOTIFY!!)
+//        }
         stopScan()
         delay(10L)
         disconnectFromDevice()

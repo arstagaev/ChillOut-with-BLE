@@ -17,6 +17,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectIndexed
+import kotlin.coroutines.coroutineContext
 
 
 class BLEStarter(ctx : Context) {
@@ -39,7 +40,7 @@ class BLEStarter(ctx : Context) {
         logAction("START!!")
         CoroutineScope(Dispatchers.Default).async {
             shared_1.collectIndexed { index, operation ->
-                var a = async {
+                async {
 
                     operation.forEachIndexed { index, bleOperations ->
                         // check permissions:
@@ -179,12 +180,14 @@ class BLEStarter(ctx : Context) {
         }
     }
 
+    suspend fun forceStop() = bleActions?.disableBLEManager()
+
     companion object {
         var shared_1 = MutableSharedFlow<MutableList<BleOperation>>(5,0, BufferOverflow.SUSPEND)
 
         var scanDevices = MutableStateFlow(arrayListOf<ScannedDevice>())
 
-        var outputBytes = MutableStateFlow(byteArrayOf())
+        var outputBytesNotifyIndicate = MutableStateFlow(byteArrayOf())
         var outputBytesRead = MutableStateFlow(byteArrayOf())
         var servicesCharacteristics = MutableStateFlow<List<BluetoothGattCharacteristic>>(listOf())
 

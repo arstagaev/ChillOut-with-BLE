@@ -19,14 +19,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import com.arstagaev.chilloutble.ui.theme.ChillOutBLETheme
 import com.arstagaev.flowble.*
+import com.arstagaev.flowble.BLEStarter.Companion.outputBytesNotifyIndicate
 import com.arstagaev.flowble.enums.*
 import com.arstagaev.flowble.enums.Delay
+import com.arstagaev.flowble.gentelman_kit.bytesToHex
 import com.arstagaev.flowble.gentelman_kit.hasPermission
+import com.arstagaev.flowble.gentelman_kit.logWarning
 import com.arstagaev.flowble.gentelman_kit.requestPermission
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectIndexed
+import java.util.UUID
+import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
 
@@ -38,7 +47,7 @@ class MainActivity : ComponentActivity() {
     lateinit var bluetoothManager : BluetoothManager
     lateinit var btAdapter: BluetoothAdapter
     //val bluetoothLeScanner by lazy {  btAdapter.bluetoothLeScanner }
-
+    var bleStarter : BLEStarter? = null
     private val requestMultiplePermissions =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             permissions.entries.forEach {
@@ -59,7 +68,7 @@ class MainActivity : ComponentActivity() {
         //ActivityCompat.startActivityForResult(this, blueToothIntent, 1,null)
 
         PermissionBlock(this).launch()
-
+        bleStarter = BLEStarter(this)
 //        CoroutineScope(CoroutineName("opp")).async {
 //            println(">>>>> 0000")
 //            PermissionEva.requestToPermission.collectIndexed { index, value ->
@@ -88,13 +97,14 @@ class MainActivity : ComponentActivity() {
 
         //bleStarter.letsGO()
         if (true) {
-            val bleStarter = BLEStarter(this)
-            GlobalScope.launch {
+
+            CoroutineScope(lifecycleScope.coroutineContext).launch {
                 BLEStarter.shared_1.emit(mutableListOf(
                     StartScan(),
                     Delay(6000L),
-                    Connect("44:44:44:44:44:0C", isImportant = false),
-                    StopScan()
+                    Connect("44:44:44:44:44:0C", isImportant = true),
+                    StopScan(),
+                    EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
                     //BleOperations.DELAY.also { it.duration = 1000 },
                 ))
 //            BLEStarter.shared_1.emit(mutableListOf(
@@ -104,6 +114,12 @@ class MainActivity : ComponentActivity() {
 //                BleOperations.DELAY.also { it.duration = 1000 },
 //                BleOperations.DISCONNECT.also { it.duration = 1000 }
 //            ))
+            }
+
+            CoroutineScope(lifecycleScope.coroutineContext).launch {
+                BLEStarter.outputBytesNotifyIndicate.collect {
+                    logWarning("Result: ${bytesToHex(it)}")
+                }
             }
         }
 
@@ -135,6 +151,9 @@ class MainActivity : ComponentActivity() {
                             , onClick = {
                                 val intent = Intent(this@MainActivity,MainActivity2::class.java)
                                 startActivity(intent)
+                                CoroutineScope(CoroutineName("stop")).launch {
+                                    bleStarter?.forceStop()
+                                }
                                 finish()
 //                                var bleAction = BleActions(applicationContext)
 //                                bleAction.startScan()
@@ -194,16 +213,14 @@ class MainActivity : ComponentActivity() {
         //bluetoothLeScanner.startScan(leScanCallback)
     }
 
-    private fun frop(activity: Activity) {
-        TODO("Not yet implemented")
-    }
-
-    private lateinit var bluetoothLeScanner :BluetoothLeScanner
-    private var scanning = false
-    private val handler = Handler()
-
     // Stops scanning after 10 seconds.
     private val SCAN_PERIOD: Long = 10000
+    override fun onDestroy() {
+
+        super.onDestroy()
 
 
+
+
+    }
 }

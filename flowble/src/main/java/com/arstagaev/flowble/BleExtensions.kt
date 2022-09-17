@@ -59,7 +59,7 @@ fun BluetoothGatt.findCharacteristic(uuid: UUID): BluetoothGattCharacteristic? {
         service.characteristics?.firstOrNull { characteristic ->
             characteristic.uuid == uuid
         }?.let { matchingCharacteristic ->
-            println(" I FOUND CHARACTERISTIC:")
+            println(" I FOUND CHARACTERISTIC: ${matchingCharacteristic.uuid.toString()}")
             return matchingCharacteristic
         }
     }
