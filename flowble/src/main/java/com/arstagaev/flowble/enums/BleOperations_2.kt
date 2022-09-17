@@ -1,8 +1,8 @@
-package com.arstagaev.flowble
+package com.arstagaev.flowble.enums
 
 import java.util.*
 
-enum class BleOperations(
+enum class BleOperations_2(
     var macAddress: String? = null,
     var uuid: UUID? = null,
     var duration: Long? = null,

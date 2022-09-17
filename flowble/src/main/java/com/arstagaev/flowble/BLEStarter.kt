@@ -1,8 +1,16 @@
 package com.arstagaev.flowble
 
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.os.Build
+import android.util.Log
+import com.arstagaev.flowble.PermissionEva.Companion.requestToPermission
+import com.arstagaev.flowble.enums.*
+import com.arstagaev.flowble.enums.Delay
+import com.arstagaev.flowble.gentelman_kit.hasPermission
+import com.arstagaev.flowble.gentelman_kit.logAction
 import com.arstagaev.liteble.models.ScannedDevice
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
@@ -10,28 +18,46 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectIndexed
 
+
 class BLEStarter(ctx : Context) {
     private val TAG = "BLEStarter"
     var bleActions: BleActions? = null
     private var lastSuccess = false
+    private var internalContext: Context? = ctx
+    //private var coroutineContext: Context? = null
+    var btAdapter: BluetoothAdapter? = null
+
     init {
-        observer()
-        bleActions = BleActions(ctx)
+        checkPermissions()
+        bookingMachine()
+        bleActions = BleActions(internalContext)
+        btAdapter = bleActions?.btAdapter
+        isBluetoothEnabled()
     }
 
-    private fun observer() {
+    private fun bookingMachine() {
+        logAction("START!!")
         CoroutineScope(Dispatchers.Default).async {
             shared_1.collectIndexed { index, operation ->
                 var a = async {
 
                     operation.forEachIndexed { index, bleOperations ->
-                        println(">>> start operation[ ${bleOperations.name}")
+                        // check permissions:
+                        lastSuccess = isBluetoothEnabled()
+                        println(">>> start operation[ ${bleOperations.toString()}")
                         lastSuccess = selector(bleOperations) ?: false
 
-                        // force waiting finish of operation
-                        while (!lastSuccess) {
-                            lastSuccess = selector(bleOperations) ?: false
-                            delay(1000)
+                        if (!lastSuccess) {
+                            // force waiting finish of operation
+                            while (!lastSuccess) {
+
+                                if (isBluetoothEnabled()) {
+                                    logAction("repeat: ${bleOperations}")
+                                    lastSuccess = selector(bleOperations) ?: false
+                                }
+
+                                delay(3000)
+                            }
                         }
 
                     }
@@ -42,67 +68,127 @@ class BLEStarter(ctx : Context) {
         }
     }
 
-    fun letsGO() {
+    fun isBluetoothEnabled(): Boolean {
+        var result = true
+        CoroutineScope(CoroutineName("permission")).launch {
+            if (bleActions?.btAdapter?.isEnabled == false) {
+                requestToPermission.emit(BlePermissions.BLUETOOTH_ON)
+                result = false
+            }
+        }
 
+        return result
     }
 
-    var bleSuccess = false
+
 
     @Synchronized // really need?
-    private suspend fun selector(operation: BleOperations) : Boolean? {
+    private suspend fun selector(operation: BleOperation) : Boolean? {
         //TODO: need check permission
-        println("$TAG ${operation.name} <-> ${operation.toString()}")
+        //println("$TAG ${operation} <-> ${operation.toString()}")
+        logAction("New Operation: ${operation.toString()}")
 
         when(operation) {
-            BleOperations.START_SCAN -> {
-                return bleActions?.startScan()
+            is StartScan -> with(operation) {
+                return bleActions?.startScan(scanFilter)
             }
-            BleOperations.STOP_SCAN -> {
+            is StopScan -> with(operation) {
                 return bleActions?.stopScan()
             }
-            BleOperations.ADVERTISE -> {
-                //TODO not implemented
+
+            is Connect -> with(operation) {
+
+                return bleActions?.connectTo(address ?: "")
             }
-            BleOperations.CONNECT -> {
-                return bleActions?.connectTo(operation.macAddress ?: "")
-            }
-            BleOperations.DISCONNECT -> {
+            is Disconnect -> with(operation) {
                 return bleActions?.disconnectFromDevice()
             }
-            BleOperations.DISCOVERY_SERVICES -> {}
-            BleOperations.WRITE_TO_CHARACTERISTIC -> {
-                return bleActions?.writeCharacteristic(uuid = operation.uuid!!, payload = operation.byteArray!!)
+            is DiscoveryServices -> with(operation) {
+                //TODO not implemented
             }
-            BleOperations.READ_FROM_CHARACTERISTIC -> {
-                return bleActions?.readCharacteristic(uuid = operation.uuid!!)
+
+            is WriteToCharacteristic -> with(operation) {
+                return bleActions?.writeCharacteristic(uuid = characteristicUuid, payload = payload)
             }
-            BleOperations.ENABLE_NOTIFY_INDICATE -> {
-                return bleActions?.enableNotifications(uuid = operation.uuid!!)
+            is ReadFromCharacteristic -> with(operation) {
+                return bleActions?.readCharacteristic(uuid = characteristicUuid)
             }
-            BleOperations.DISABLE_NOTIFY_INDICATE -> {
-                return bleActions?.disableNotifications(uuid = operation.uuid!!)
+
+            is EnableNotifications -> with(operation) {
+                return bleActions?.enableNotifications(uuid = characteristicUuid)
             }
-            BleOperations.GET_BATTERY_LEVEL -> {
+            is DisableNotifications -> with(operation) {
+                return bleActions?.disableNotifications(uuid = characteristicUuid)
+            }
+
+            is GetBatteryLevel -> with(operation) {
+                //TODO not implemented
                 return false
             }
-            BleOperations.FULL_STOP -> {
-                bleActions?.disableBLEManager()
+            is ForceStop -> with(operation) {
+                return bleActions?.disableBLEManager()
             }
-            BleOperations.DELAY -> {
-                delay(operation.duration ?: 0)
-                shared_1.resetReplayCache()
+            is Delay -> with(operation) {
+                delay(duration ?: 0)
+                return true
+                //shared_1.resetReplayCache() // ?
             }
         }
         return false
     }
 
+    fun checkPermissions(): Boolean {
+        //check permissions
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false
+                && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false
+                && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false) {
+
+                //REVERT_WORK_CAUSE_PERMISSION = false
+                return true
+            }else {
+
+                Log.e(TAG,"########################################")
+                Log.e(TAG,"# Error: Don`t have permission for BLE #")
+                Log.e(TAG,"# Error: Don`t have permission for BLE #")
+                Log.e(TAG,"# Error: Don`t have permission for BLE #")
+                Log.e(TAG,"# ACCESS_FINE_LOCATION:${internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
+                Log.e(TAG,"# BLUETOOTH_SCAN:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false} #")
+                Log.e(TAG,"# BLUETOOTH_CONNECT:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false} #")
+                Log.e(TAG,"########################################")
+                return false
+                //REVERT_WORK_CAUSE_PERMISSION = true
+            }
+        }else {
+            if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false) {
+
+                //REVERT_WORK_CAUSE_PERMISSION = false
+                return true
+            }else {
+
+                Log.e(TAG,"########################################")
+                Log.e(TAG,"# Error: Don`t have permission for BLE #")
+                Log.e(TAG,"# Error: Don`t have permission for BLE #")
+                Log.e(TAG,"# Error: Don`t have permission for BLE #")
+                Log.e(TAG,"# ACCESS_FINE_LOCATION:${internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
+                Log.e(TAG,"########################################")
+                return false
+                //REVERT_WORK_CAUSE_PERMISSION = true
+            }
+        }
+    }
+
     companion object {
-        var shared_1 = MutableSharedFlow<MutableList<BleOperations>>(5,0, BufferOverflow.SUSPEND)
+        var shared_1 = MutableSharedFlow<MutableList<BleOperation>>(5,0, BufferOverflow.SUSPEND)
 
         var scanDevices = MutableStateFlow(arrayListOf<ScannedDevice>())
 
         var outputBytes = MutableStateFlow(byteArrayOf())
         var outputBytesRead = MutableStateFlow(byteArrayOf())
         var servicesCharacteristics = MutableStateFlow<List<BluetoothGattCharacteristic>>(listOf())
+
+        // setup in activity, chain with him by lifecycle and run if needed:
+        //var requestToPermission = MutableSharedFlow<BlePermissions>(5,0, BufferOverflow.SUSPEND)
     }
 }

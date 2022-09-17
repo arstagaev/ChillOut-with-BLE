@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.*
 import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
@@ -15,17 +16,18 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.arstagaev.flowble.BLEStarter.Companion.outputBytesRead
 import com.arstagaev.flowble.BLEStarter.Companion.scanDevices
+import com.arstagaev.flowble.BleParameters.BLE_STATUS
 import com.arstagaev.flowble.BleParameters.CONNECTED_DEVICE
 import com.arstagaev.flowble.BleParameters.SCAN_FILTERS
 import com.arstagaev.flowble.BleParameters.STATE_BLE
 import com.arstagaev.flowble.BleParameters.TARGET_CHARACTERISTIC_NOTIFY
 import com.arstagaev.flowble.BleParameters.scanResultsX
 import com.arstagaev.flowble.gentelman_kit.hasPermission
+import com.arstagaev.flowble.gentelman_kit.logError
+import com.arstagaev.flowble.gentelman_kit.logWarning
 import com.arstagaev.flowble.models.StateBle
 import com.arstagaev.liteble.models.ScannedDevice
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -33,7 +35,7 @@ class BleActions(
     ctx: Context? = null,
 ) : BleManager(ctx) {
 
-    private val TAG = BleActions::class.qualifiedName
+    private val TAG = this::class.qualifiedName
     private var scanning = false
     var activity: Activity? = null
     var REVERT_WORK_CAUSE_PERMISSION = false
@@ -42,11 +44,11 @@ class BleActions(
     init {
         internalContext = ctx
         checkPermissions()
+
     }
 
     private fun checkPermissions() {
         //check permissions
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false
                 && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false
@@ -105,14 +107,17 @@ class BleActions(
 
     @SuppressLint("MissingPermission")
     suspend fun connectTo(address: String) : Boolean  {
-        if (address == null ){
-            Log.e("eee","eee address is null <")
+        if (address == null || address.isEmpty()){
+
+            logError("address is null or Empty<")
             return false
         }
         if (CONNECTED_DEVICE != null && CONNECTED_DEVICE?.address == address) {
             return true
         }
-        //toastShow("Connecting ..",internalContext!!)
+
+
+
         Log.d("eee","connect to ${address} <<<<<<<<<<<<<<<<<<<<")
         btAdapter.let { adapter ->
             try {
@@ -123,27 +128,34 @@ class BleActions(
                         Manifest.permission.BLUETOOTH_CONNECT
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    //return false
+                    return false
                 }
-                //public static final int DEVICE_TYPE_CLASSIC = 1;
-                //    public static final int DEVICE_TYPE_DUAL = 3;
-                //    public static final int DEVICE_TYPE_LE = 2;
-                //    public static final int DEVICE_TYPE_UNKNOWN = 0; tag my: DEVICE_TYPE_LE
-                Log.i(TAG,">> >> Type of device: ${device.type}")
-                bluetoothGatt = device.connectGatt(internalContext, false, bluetoothGattCallback)
-                //return@coroutineScope true
-                //SUPER_BLE_DEVICE = bluetoothGatt?.device
+
+                if (device == null) {
+                    logWarning("ble device is null!!!")
+                    return false
+                }
+                CoroutineScope(CoroutineName("checkOfConnect")).async {
+
+                    bluetoothGatt = device.connectGatt(internalContext, false, bluetoothGattCallback)
+                    delay(1000)
+
+                }.await()
+
+                //Log.i(TAG,">> >> Type of device: ${device.type}  isNull:${bluetoothGatt?.services?.size ?: null} conn stat: ${bluetoothGatt?.getConnectionState(device) ?: null}  BLE Status: ${BLE_STATUS}")
+                var a = bluetoothManager?.getConnectedDevices(BluetoothProfile.GATT)
+
+                logWarning("111 ${a?.joinToString() ?: "null"}  isNull:${bluetoothGatt?.services?.size ?: null}    disk${bluetoothGatt?.discoverServices()}")
+                val connectedDevice = a?.find { it.address == address }
+
+                // if device don't found
+                if (BLE_STATUS == 133 || connectedDevice == null) {
+                    return false
+                }
+
                 return true
             } catch (exception: IllegalArgumentException) {
                 Log.w(TAG, "Device not found with provided address.  Unable to connect.")
-                //return@coroutineScope false
                 return false
             }
         } ?: run {
@@ -249,7 +261,7 @@ class BleActions(
 
 
     @SuppressLint("MissingPermission")
-    fun startScan(): Boolean {
+    fun startScan(scanFilter: ScanFilter?): Boolean {
         if (scanning)
             return true
 
@@ -270,11 +282,21 @@ class BleActions(
 //            bluetoothLeScanner.startScan(leScanCallback)
 //            print("WITHOUT SCAN FILTERS I Scan")
 //        }
-        bluetoothLeScanner?.startScan(
-            //SCAN_FILTERS,
-            //scanSettings,
-            leScanCallback
-        )
+        if (scanFilter!= null) {
+            SCAN_FILTERS.add(scanFilter)
+
+            bluetoothLeScanner?.startScan(
+                SCAN_FILTERS,
+                scanSettings,
+                leScanCallback
+            )
+        }else {
+            bluetoothLeScanner?.startScan(
+                leScanCallback
+            )
+        }
+
+
         scanning = true
         println("Scanning is now: ${scanning}")
         return scanning
@@ -432,6 +454,7 @@ class BleActions(
                 GlobalScope.launch {
                     scanDevices.emit(scanResultsX.value)
                 }
+
 //                GlobalScope.launch {
 //                    scanResultsX.emit(scanResultsNewFoundedINTERNAL)
 //                }
@@ -479,7 +502,7 @@ class BleActions(
 
         return false
     }
-    suspend fun disableBLEManager() {
+    suspend fun disableBLEManager(): Boolean {
         //updateNotificationFlow.cancellable()
 
 
@@ -496,6 +519,7 @@ class BleActions(
         Log.w(TAG," disableBLEManager !!! ")
         Log.w(TAG," disableBLEManager !!! ")
         Log.w(TAG," disableBLEManager !!! ")
+        return true
     }
 
     companion object {

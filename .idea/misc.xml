@@ -5,6 +5,7 @@
       <map>
         <entry key="../../../.gradle/caches/transforms-3/3271167e7c63f91cf73d9791a898fcd7/transformed/core-1.7.0/res/drawable/notification_bg.xml" value="0.218" />
         <entry key="app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.218" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.3026041666666667" />
       </map>
     </option>
   </component>

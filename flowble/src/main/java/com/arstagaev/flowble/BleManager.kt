@@ -8,7 +8,7 @@ import android.util.Log
 import androidx.core.content.getSystemService
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_CONNECTED
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_DISCONNECTED
-import com.arstagaev.flowble.BleParameters.GATT_SERVICES
+import com.arstagaev.flowble.enums.BleOperations_2
 import com.arstagaev.flowble.gentelman_kit.bytesToHex
 import com.arstagaev.flowble.models.StateBle
 
@@ -36,7 +36,7 @@ open class BleManager(
         bluetoothManager.adapter
     }
     @SuppressLint("MissingPermission")
-    protected var alreadyBondedDevices = btAdapter.bondedDevices
+    var alreadyBondedDevices = btAdapter.bondedDevices
     var bluetoothLeScanner =   btAdapter.bluetoothLeScanner
 
 
@@ -53,7 +53,7 @@ open class BleManager(
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             BleParameters.BLE_STATUS = status
             Log.w("bleble","gatt status:${BleParameters.BLE_STATUS} \n${gatt?.printGattTable()} <<|")
-            arrayListOf<BleOperations>(BleOperations.DELAY)
+            arrayListOf<BleOperations_2>(BleOperations_2.DELAY)
 
             when(status) {
                 //0 ->  { NEED_RESET = false }
@@ -64,7 +64,11 @@ open class BleManager(
                 19 -> {
                     //NEED_RESET = true
                 }
+                133 -> {
+                    // unknown error
+                }
             }
+            gatt
             when(newState) {
                 BluetoothProfile.STATE_DISCONNECTED  -> { Log.w("www", "state:  $newState  STATE_DISCONNECTED  ")
                     BleParameters.STATE_BLE = StateBle.NO_CONNECTED

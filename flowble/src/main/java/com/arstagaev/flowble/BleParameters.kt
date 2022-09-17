@@ -3,6 +3,7 @@ package com.arstagaev.flowble
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.le.ScanFilter
+import com.arstagaev.flowble.enums.BleOperations_2
 import com.arstagaev.liteble.models.ScannedDevice
 import com.arstagaev.flowble.models.StateBle
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,7 @@ object BleParameters {
     var SCAN_FILTERS = mutableListOf<ScanFilter>()
     var GATT_SERVICES :  List<BluetoothGattService>? = null
 
-    var operationQueue = ArrayList<BleOperations>()
+    var operationQueue = ArrayList<BleOperations_2>()
 
     var TARGET_CHARACTERISTIC_NOTIFY : UUID? = null
 
