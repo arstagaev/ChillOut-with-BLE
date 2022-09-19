@@ -45,7 +45,7 @@ class BLEStarter(ctx : Context) {
                     operation.forEachIndexed { index, bleOperations ->
                         // check permissions:
                         lastSuccess = isBluetoothEnabled()
-                        println(">>> start operation[ ${bleOperations.toString()}")
+
                         lastSuccess = selector(bleOperations) ?: false
 
                         if (!lastSuccess && bleOperations.isImportant) {
@@ -62,7 +62,7 @@ class BLEStarter(ctx : Context) {
                         }
 
                     }
-                    println(">>> end operation ]")
+                    logAction("End of Operation: ${operation.toString()} <<<<")
 
                 }.await()
             }
@@ -85,9 +85,7 @@ class BLEStarter(ctx : Context) {
 
     @Synchronized // really need?
     private suspend fun selector(operation: BleOperation) : Boolean? {
-        //TODO: need check permission
-        //println("$TAG ${operation} <-> ${operation.toString()}")
-        logAction("New Operation: ${operation.toString()}")
+        logAction("New Operation: ${operation.toString()} >>>>")
 
         when(operation) {
             is StartScan -> with(operation) {
