@@ -11,13 +11,13 @@ import com.arstagaev.flowble.enums.*
 import com.arstagaev.flowble.enums.Delay
 import com.arstagaev.flowble.gentelman_kit.hasPermission
 import com.arstagaev.flowble.gentelman_kit.logAction
+import com.arstagaev.flowble.models.CharacterCarrier
 import com.arstagaev.liteble.models.ScannedDevice
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectIndexed
-import kotlin.coroutines.coroutineContext
 
 
 class BLEStarter(ctx : Context) {
@@ -39,7 +39,7 @@ class BLEStarter(ctx : Context) {
     private fun bookingMachine() {
         logAction("START!!")
         CoroutineScope(Dispatchers.Default).async {
-            shared_1.collectIndexed { index, operation ->
+            bleCommandTrain.collectIndexed { index, operation ->
                 async {
 
                     operation.forEachIndexed { index, bleOperations ->
@@ -112,7 +112,7 @@ class BLEStarter(ctx : Context) {
                 return bleActions?.writeCharacteristic(uuid = characteristicUuid, payload = payload)
             }
             is ReadFromCharacteristic -> with(operation) {
-                return bleActions?.readCharacteristic(uuid = characteristicUuid)
+                return bleActions?.readCharacteristic(characteristicUuid = characteristicUuid)
             }
 
             is EnableNotifications -> with(operation) {
@@ -183,14 +183,14 @@ class BLEStarter(ctx : Context) {
     suspend fun forceStop() = bleActions?.disableBLEManager()
 
     companion object {
-        var shared_1 = MutableSharedFlow<MutableList<BleOperation>>(5,0, BufferOverflow.SUSPEND)
+        var bleCommandTrain = MutableSharedFlow<MutableList<BleOperation>>(5,0, BufferOverflow.SUSPEND)
 
         var scanDevices = MutableStateFlow(arrayListOf<ScannedDevice>())
 
-        var outputBytesNotifyIndicate = MutableStateFlow(byteArrayOf())
-        var outputBytesRead = MutableStateFlow(byteArrayOf())
-        var servicesCharacteristics = MutableStateFlow<List<BluetoothGattCharacteristic>>(listOf())
+        var outputBytesNotifyIndicate = MutableSharedFlow<CharacterCarrier>(10,0, BufferOverflow.SUSPEND)
+        var outputBytesRead           = MutableSharedFlow<CharacterCarrier>(10,0, BufferOverflow.SUSPEND)
 
+        var servicesCharacteristics   = MutableSharedFlow<MutableList<CharacterCarrier>>(10,0, BufferOverflow.SUSPEND)
         // setup in activity, chain with him by lifecycle and run if needed:
         //var requestToPermission = MutableSharedFlow<BlePermissions>(5,0, BufferOverflow.SUSPEND)
     }

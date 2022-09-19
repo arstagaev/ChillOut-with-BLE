@@ -7,14 +7,17 @@ import android.content.IntentFilter
 import android.util.Log
 import androidx.core.content.getSystemService
 import com.arstagaev.flowble.BLEStarter.Companion.outputBytesNotifyIndicate
+import com.arstagaev.flowble.BLEStarter.Companion.outputBytesRead
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_CONNECTED
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_DISCONNECTED
 import com.arstagaev.flowble.enums.BleOperations_2
 import com.arstagaev.flowble.gentelman_kit.bytesToHex
 import com.arstagaev.flowble.gentelman_kit.logWarning
+import com.arstagaev.flowble.models.CharacterCarrier
 import com.arstagaev.flowble.models.StateBle
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 open class BleManager(
@@ -106,39 +109,63 @@ open class BleManager(
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                //broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
 
                 Log.w("www", "onServicesDiscovered received:  $status  GATT_SUCCESS")
 
-                //GATT_SERVICES = getSupportedGattServices() as List<BluetoothGattService>?
                 BleParameters.GATT_SERVICES = gatt?.services as List<BluetoothGattService>?
 
             } else {
                 Log.w("www", "onServicesDiscovered received: $status")
             }
         }
-        val firstByteStart : Byte = 0x01
+
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
-            //logWarning(" PAYLOAD -> ${bytesToHex(characteristic.value)}")
-            //Log.w("www","www >>> ${bytesToHex(characteristic.value)}<<")
             CoroutineScope(CoroutineName("onCharacteristicChanged")).launch {
-                outputBytesNotifyIndicate.emit(characteristic.value)
+
+                outputBytesNotifyIndicate.emit(
+                    CharacterCarrier(
+                        uuidCharacteristic = characteristic?.uuid,
+                        value = characteristic?.value
+                    )
+                )
+
+                println("charact: ${characteristic.uuid}")
             }
 
-//        if (receivingRawData?.get(0) == firstByteStart) {
-//
-//            //Log.w(TAG,"FIRST BYTE !!$")
-//
-//        }
-
-            //receivingRawData = characteristic.value
-
-            if (BleParameters.STATE_BLE == StateBle.CONNECTED_BUT_NO_SUBSCRIBED && characteristic.value.size > 240){
-            }
             BleParameters.STATE_BLE = StateBle.NOTIFYING_OR_INDICATING
+        }
+
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?,
+            status: Int
+        ) {
+            super.onCharacteristicRead(gatt, characteristic, status)
+
+            CoroutineScope(CoroutineName("onCharacteristicRead")).launch {
+
+                outputBytesRead.emit(
+                    CharacterCarrier(
+                        uuidCharacteristic = characteristic?.uuid,
+                        value = characteristic?.value,
+                        codeStatus = status
+                    )
+                )
+
+            }
+
+        }
+
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?,
+            status: Int
+        ) {
+            super.onCharacteristicWrite(gatt, characteristic, status)
+
         }
     }
 

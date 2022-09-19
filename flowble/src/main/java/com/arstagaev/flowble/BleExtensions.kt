@@ -123,8 +123,21 @@ fun BluetoothGattDescriptor.isReadable(): Boolean =
 fun BluetoothGattDescriptor.isWritable(): Boolean =
     containsPermission(BluetoothGattDescriptor.PERMISSION_WRITE)
 
+// is work well, try with on\off notify:
+// when enabled I found { 0x01 00 }
+// TODO: need check with indicate
+fun BluetoothGattDescriptor.isEnabled(): Boolean =
+    character(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) || character(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)
+
+// not work, try with on\off notify:
+fun BluetoothGattDescriptor.isDisabled(): Boolean =
+    character(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
+
 fun BluetoothGattDescriptor.containsPermission(permission: Int): Boolean =
     permissions and permission != 0
+
+fun BluetoothGattDescriptor.character(type: ByteArray): Boolean =
+    value.contentEquals(type)
 
 /**
  * Convenience extension function that returns true if this [BluetoothGattDescriptor]

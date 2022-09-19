@@ -16,16 +16,12 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.arstagaev.flowble.BLEStarter.Companion.outputBytesRead
 import com.arstagaev.flowble.BLEStarter.Companion.scanDevices
-import com.arstagaev.flowble.BleParameters.BLE_STATUS
 import com.arstagaev.flowble.BleParameters.CONNECTED_DEVICE
 import com.arstagaev.flowble.BleParameters.SCAN_FILTERS
 import com.arstagaev.flowble.BleParameters.STATE_BLE
 import com.arstagaev.flowble.BleParameters.TARGET_CHARACTERISTIC_NOTIFY
 import com.arstagaev.flowble.BleParameters.scanResultsX
-import com.arstagaev.flowble.gentelman_kit.hasPermission
-import com.arstagaev.flowble.gentelman_kit.logAction
-import com.arstagaev.flowble.gentelman_kit.logError
-import com.arstagaev.flowble.gentelman_kit.logWarning
+import com.arstagaev.flowble.gentelman_kit.*
 import com.arstagaev.flowble.models.StateBle
 import com.arstagaev.liteble.models.ScannedDevice
 import kotlinx.coroutines.*
@@ -169,7 +165,8 @@ class BleActions(
         Log.w(TAG,"enableNotifications()()()()()()")
 
         bluetoothGatt?.findCharacteristic(uuid)?.let { characteristic ->
-            val cccdUuid = characteristic.descriptors[0].uuid ?: UUID.fromString(CCC_DESCRIPTOR_UUID)
+            //val cccdUuid = characteristic.descriptors[0].uuid ?: UUID.fromString(CCC_DESCRIPTOR_UUID)
+            val cccdUuid = UUID.fromString(CCC_DESCRIPTOR_UUID)
 
             val payload = when {
                 characteristic.isIndicatable() ->
@@ -189,11 +186,20 @@ class BleActions(
                     //signalEndOfOperation()
                     return false
                 }
+                BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+
+                //logWarning("notiiif: ${cccDescriptor.isReadable()} ${cccDescriptor.isEnabled()}")
+
+
+                logWarning("notiiif: ${cccDescriptor.isEnabled()}")
 
                 cccDescriptor.value = payload
                 bluetoothGatt?.writeDescriptor(cccDescriptor)
                 TARGET_CHARACTERISTIC_NOTIFY = uuid
                 logAction("Success Enable Notification !! ")
+
+                logWarning("notiiif:  ${cccDescriptor.isEnabled()}")
+                logWarning("notiiif: ${cccDescriptor.value} || ${cccDescriptor.value.toHexString()}")
                 return true
             } ?: internalContext.run {
                 Log.e(TAG,"${characteristic.uuid} doesn't contain the CCC descriptor!")
@@ -321,16 +327,19 @@ class BleActions(
 
     @SuppressLint("MissingPermission")
     fun readCharacteristic(
-        uuid: UUID,
+        characteristicUuid: UUID,
     ) : Boolean {
-        if (uuid == null) return false
-        val characteristicTarget = bluetoothGatt?.findCharacteristic(uuid = uuid)//getCharacteristic(uuid) ?: return false
+        if (characteristicUuid == null) return false
+//        val characteristicTarget = bluetoothGatt?.findCharacteristic(uuid = characteristicUuid)//getCharacteristic(uuid) ?: return false
+//        logWarning("res value: ${characteristicTarget?.value}")
 
-        return if (characteristicTarget?.value != null) {
-            outputBytesRead.value = characteristicTarget.value
-            true
-        }else {
-            false
+        bluetoothGatt?.findCharacteristic(characteristicUuid)?.let { characteristic ->
+
+            return bluetoothGatt?.readCharacteristic(characteristic) ?: false
+
+        } ?: run {
+            logError("Cannot find $characteristicUuid to read from")
+            return false
         }
     }
 
@@ -340,11 +349,10 @@ class BleActions(
         payload: ByteArray
     ): Boolean {
         if (uuid == null) return false
+
         val characteristicTarget = bluetoothGatt?.findCharacteristic(uuid = uuid)//getCharacteristic(uuid) ?: return false
 
-        if (CONNECTED_DEVICE == null && characteristicTarget == null) {
-            return false
-        }
+        if (CONNECTED_DEVICE == null && characteristicTarget == null) { return false }
 
         val writeType = when {
             characteristicTarget!!.isWritable() -> BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
@@ -358,35 +366,14 @@ class BleActions(
         characteristicTarget.let { characteristic ->
             characteristic.writeType = writeType
             characteristic.value = payload
-            bluetoothGatt!!.writeCharacteristic(characteristic)
-        } ?: internalContext.run {
+            bluetoothGatt?.writeCharacteristic(characteristic)
+        } ?: run {
             Log.e("","Cannot find  to write to")
+            return false
         }
         return true
     }
 
-//    fun getCharacteristic(uuid: UUID): BluetoothGattCharacteristic?{
-//        GATT_SERVICES?.forEachIndexed { index, bluetoothGattService ->
-//            var a = bluetoothGattService.getCharacteristic(uuid)
-//            if (a != null && a.uuid == uuid) {
-//                println(" I FOUND CHARACTERISTIC: ${a.uuid.toString()}")
-//                return a
-//            }
-//        }
-////        if (GATT_SERVICES != null) {
-////            for (i  in 0 until GATT_SERVICES.size) {
-////                for (z in 0 until BleParameters.GATT_SERVICES[i].characteristics.size) {
-////                    if (BleParameters.GATT_SERVICES[i].characteristics[z].uuid == uuid) {
-////                        println(" I FOUND CHARACTERISTIC: ${BleParameters.GATT_SERVICES[i].characteristics[z].uuid.toString()}")
-////                        return BleParameters.GATT_SERVICES[i].characteristics[z]
-////                    }
-////                }
-////            }
-////        }
-//
-//        println(" I DONT FOUND CHARACTERISTIC:")
-//        return null
-//    }
 
     //////////////////////////////////////////////////////////
     // Callbacks                                            //
@@ -409,28 +396,7 @@ class BleActions(
         @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
-            //println("<>>>> ${result.device.address}")
 
-            //Log.i("FOUNDED","device: ${result.device.address ?: "nuller"}  ${scanResults.value?.size} rssi: ${result.rssi}")
-//            if (callbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) { // not working
-//            }
-
-            //println("%%%%%%%%%%%%%% ${result.device.name} ${result.device.address} rssi:${result.rssi} ${callbackType}")
-
-            //Log.d("TAG","scan~ Pizdec  ${result.device.name} ${result.device.address} rssi:${result.rssi} ${callbackType}")
-
-//            when(callbackType) {
-//                ScanSettings.CALLBACK_TYPE_MATCH_LOST -> {
-//                    println("CALLBACK_TYPE_MATCH_LOST ")
-//                }
-//                ScanSettings.CALLBACK_TYPE_FIRST_MATCH -> {
-//                    println("CALLBACK_TYPE_FIRST_MATCH ")
-//                }
-//                ScanSettings.CALLBACK_TYPE_ALL_MATCHES -> {
-//                    println("CALLBACK_TYPE_ALL_MATCHES ")
-//                }
-//                //ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT -> {}
-//            }
             val indexQuery = scanResultsX.value.indexOfFirst {
                 it.bt.address == result.device.address
             }
@@ -459,7 +425,6 @@ class BleActions(
 //                GlobalScope.launch {
 //                    scanResultsX.emit(scanResultsNewFoundedINTERNAL)
 //                }
-                //println(" >>> ${BleParameters.scanResultsX.value.joinToString()}")
             } else { /** founded new device */
                 scanResultsNewFoundedINTERNAL.add(
                     ScannedDevice(
@@ -483,15 +448,8 @@ class BleActions(
 
     @SuppressLint("MissingPermission")
     fun disconnectFromDevice(): Boolean {
-        Log.w(TAG,"disconnectFromDevice()()()()()()()")
-//        if (ActivityCompat.checkSelfPermission(
-//                internalContext!!,
-//                Manifest.permission.BLUETOOTH_CONNECT
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            return
-//        }
-        //toastShow("Disconnecting ..",internalContext!!)
+        logWarning("disconnect From Device !!!")
+
         if (bluetoothGatt != null){
             bluetoothGatt?.close()
             bluetoothGatt?.disconnect()
@@ -504,8 +462,6 @@ class BleActions(
         return false
     }
     suspend fun disableBLEManager(): Boolean {
-        //updateNotificationFlow.cancellable()
-
 
 //        if (TARGET_CHARACTERISTIC_NOTIFY != null) {
 //            disableNotifications(TARGET_CHARACTERISTIC_NOTIFY!!)
@@ -514,9 +470,7 @@ class BleActions(
         delay(10L)
         disconnectFromDevice()
         delay(30)
-//        if (gattUpdateReceiver != null) {
-//            internalContext?.unregisterReceiver(gattUpdateReceiver)
-//        }
+
         Log.w(TAG," disableBLEManager !!! ")
         Log.w(TAG," disableBLEManager !!! ")
         Log.w(TAG," disableBLEManager !!! ")

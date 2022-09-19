@@ -1,13 +1,9 @@
 package com.arstagaev.chilloutble
 
 import android.Manifest
-import android.app.Activity
 import android.bluetooth.*
-import android.bluetooth.le.BluetoothLeScanner
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,24 +14,16 @@ import androidx.compose.material.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.lifecycleScope
 import com.arstagaev.chilloutble.ui.theme.ChillOutBLETheme
 import com.arstagaev.flowble.*
-import com.arstagaev.flowble.BLEStarter.Companion.outputBytesNotifyIndicate
 import com.arstagaev.flowble.enums.*
 import com.arstagaev.flowble.enums.Delay
 import com.arstagaev.flowble.gentelman_kit.bytesToHex
-import com.arstagaev.flowble.gentelman_kit.hasPermission
 import com.arstagaev.flowble.gentelman_kit.logWarning
 import com.arstagaev.flowble.gentelman_kit.requestPermission
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.cancel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectIndexed
 import java.util.UUID
-import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
 
@@ -99,11 +87,13 @@ class MainActivity : ComponentActivity() {
         if (true) {
 
             CoroutineScope(lifecycleScope.coroutineContext).launch {
-                BLEStarter.shared_1.emit(mutableListOf(
+                BLEStarter.bleCommandTrain.emit(mutableListOf(
                     StartScan(),
                     Delay(6000L),
                     Connect("44:44:44:44:44:0C", isImportant = true),
                     StopScan(),
+                    //ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
+                    EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
                     EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
                     //BleOperations.DELAY.also { it.duration = 1000 },
                 ))
@@ -118,7 +108,7 @@ class MainActivity : ComponentActivity() {
 
             CoroutineScope(lifecycleScope.coroutineContext).launch {
                 BLEStarter.outputBytesNotifyIndicate.collect {
-                    logWarning("Result: ${bytesToHex(it)}")
+                    logWarning("Result: ${bytesToHex(it.value!!)}")
                 }
             }
         }
