@@ -95,8 +95,8 @@ data class GetBatteryLevel(
     override val isImportant: Boolean = false
 ) : BleTarget()
 
-/** */
-data class Delay(
+/** DelayOpera..tion */
+data class DelayOpera(
     val duration: Long, override val isImportant: Boolean = true
 ) : BleOperation()
 

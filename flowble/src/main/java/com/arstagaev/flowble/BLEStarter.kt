@@ -2,13 +2,11 @@ package com.arstagaev.flowble
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import com.arstagaev.flowble.PermissionEva.Companion.requestToPermission
 import com.arstagaev.flowble.enums.*
-import com.arstagaev.flowble.enums.Delay
+import com.arstagaev.flowble.enums.DelayOpera
 import com.arstagaev.flowble.gentelman_kit.hasPermission
 import com.arstagaev.flowble.gentelman_kit.logAction
 import com.arstagaev.flowble.gentelman_kit.logError
@@ -131,7 +129,7 @@ class BLEStarter(ctx : Context) {
             is ForceStop -> with(operation) {
                 return bleActions?.disableBLEManager()
             }
-            is Delay -> with(operation) {
+            is DelayOpera -> with(operation) {
                 delay(duration ?: 0)
                 return true
                 //shared_1.resetReplayCache() // ?

@@ -1,0 +1,65 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.arstagaev.liteble" >
+4
+5    <uses-sdk
+6        android:minSdkVersion="24"
+6-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml
+7        android:targetSdkVersion="31" />
+7-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml
+8
+9    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+9-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:6:5-77
+9-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:6:22-74
+10    <uses-permission android:name="android.permission.WAKE_LOCK" />
+10-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:7:5-68
+10-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:7:22-65
+11    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+11-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:8:5-81
+11-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:8:22-78
+12    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> <!-- FROM ANDROID 12 -->
+12-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:10:5-78
+12-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:10:22-75
+13
+14
+15    <!-- for Android 11 and lower -->
+16    <uses-permission
+16-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:14:5-16:38
+17        android:name="android.permission.BLUETOOTH"
+17-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:15:9-52
+18        android:maxSdkVersion="30" />
+18-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:16:9-35
+19    <uses-permission
+19-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:17:5-19:38
+20        android:name="android.permission.BLUETOOTH_ADMIN"
+20-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:18:9-58
+21        android:maxSdkVersion="30" />
+21-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:19:9-35
+22    <!-- needed only for scanning -->
+23
+24
+25    <!-- for Android 12 and above, include the ones you really need -->
+26    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+26-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:23:5-76
+26-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:23:22-73
+27    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+27-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:24:5-73
+27-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:24:22-70
+28    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+28-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:27:5-79
+28-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:27:22-76
+29    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+29-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:28:5-81
+29-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:28:22-78
+30    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+30-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:29:5-85
+30-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:29:22-82
+31
+32    <uses-feature
+32-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:30:5-32:35
+33        android:name="android.hardware.bluetooth_le"
+33-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:31:9-53
+34        android:required="true" />
+34-->C:\Users\ion8\AndroidStudioProjects\ChillOut-with-BLE-Library\liteble\src\main\AndroidManifest.xml:32:9-32
+35
+36</manifest>
