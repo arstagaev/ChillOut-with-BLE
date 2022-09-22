@@ -35,29 +35,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        bluetoothManager = getSystemService(BluetoothManager::class.java)
-//        btAdapter = bluetoothManager.getAdapter()
-//        bluetoothLeScanner = btAdapter!!.bluetoothLeScanner
-        requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, (0..100).random())
-        //requestPermission(Manifest.permission.BLUETOOTH_CONNECT, 1)
-
-        //val blueToothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-        //ActivityCompat.startActivityForResult(this, blueToothIntent, 1,null)
-
-
-
+        // here we receive bytes from Notify characteristic:
         CoroutineScope(lifecycleScope.coroutineContext).launch {
             BLEStarter.outputBytesNotifyIndicate.collect {
                 logWarning("Result: ${bytesToHex(it.value!!)}")
             }
         }
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            requestMultiplePermissions.launch(arrayOf(
-//                Manifest.permission.BLUETOOTH_SCAN,
-//                Manifest.permission.BLUETOOTH_CONNECT))
-//        }
-
+        // here we get found devices after scanning:
+        CoroutineScope(lifecycleScope.coroutineContext).launch {
+            BLEStarter.scanDevices.collect {
+                logWarning("What I found: ${it}")
+            }
+        }
 
         setContent {
             ChillOutBLETheme {
@@ -121,7 +111,7 @@ class MainActivity : ComponentActivity() {
                 DelayOpera(6000L),
                 Connect("44:44:44:44:44:0C", isImportant = true),
                 StopScan(),
-                //ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
+                ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
                 EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
                 EnableNotifications("44:44:44:44:44:0C", UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
             ))

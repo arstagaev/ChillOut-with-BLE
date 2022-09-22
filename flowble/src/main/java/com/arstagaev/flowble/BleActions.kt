@@ -113,10 +113,17 @@ class BleActions(
         if (CONNECTED_DEVICE != null && CONNECTED_DEVICE?.address == address) {
             return true
         }
+        //check if we don`t use demo
+        if (address == "44:44:44:44:44:0C") {
+            repeat(10) {
+                logWarning("!! ChillOutBLE: YOU USING DEMO MAC-ADDRESS, change to real one !!")
+            }
+
+        }
 
 
 
-        Log.d("eee","connect to ${address} <<<<<<<<<<<<<<<<<<<<")
+        logAction("connect to ${address} <<<<<<<<<<<<<<<<<<<<")
         btAdapter.let { adapter ->
             try {
                 val device = adapter.getRemoteDevice(address)
@@ -143,7 +150,7 @@ class BleActions(
                 // check we connected or not
                 var a = bluetoothManager?.getConnectedDevices(BluetoothProfile.GATT)
 
-                logWarning("111 ${a?.joinToString() ?: "null"}  isNull:${bluetoothGatt?.services?.size ?: null}    disk${bluetoothGatt?.discoverServices()}")
+                logWarning(" ${a?.joinToString() ?: "null"}  isNull:${bluetoothGatt?.services?.size ?: null}    disk${bluetoothGatt?.discoverServices()}")
 
                 // if device don't found
                 val connectedDevice = a?.find { it.address == address } ?: return false
@@ -163,7 +170,7 @@ class BleActions(
     @SuppressLint("MissingPermission")
     fun enableNotifications(uuid: UUID): Boolean {
 
-        Log.w(TAG,"enableNotifications()()()()()()")
+        logAction("$TAG enableNotifications ")
 
         bluetoothGatt?.findCharacteristic(uuid)?.let { characteristic ->
             //val cccdUuid = characteristic.descriptors[0].uuid ?: UUID.fromString(CCC_DESCRIPTOR_UUID)
@@ -183,32 +190,25 @@ class BleActions(
             characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
 
                 if (!bluetoothGatt?.setCharacteristicNotification(characteristic, true)!!) {
-                    Log.e(TAG,"setCharacteristicNotification failed for ${characteristic.uuid}")
-                    //signalEndOfOperation()
+                    logError("$TAG setCharacteristicNotification failed for ${characteristic.uuid}")
                     return false
                 }
-                BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
 
-                //logWarning("notiiif: ${cccDescriptor.isReadable()} ${cccDescriptor.isEnabled()}")
-
-
-                logWarning("notiiif: ${cccDescriptor.isEnabled()}")
+                logWarning("notify: ${cccDescriptor.isEnabled()}")
 
                 cccDescriptor.value = payload
                 bluetoothGatt?.writeDescriptor(cccDescriptor)
                 TARGET_CHARACTERISTIC_NOTIFY = uuid
                 logAction("Success Enable Notification !! ")
 
-                logWarning("notiiif:  ${cccDescriptor.isEnabled()}")
-                logWarning("notiiif: ${cccDescriptor.value} || ${cccDescriptor.value.toHexString()}")
+                logWarning("notify:  ${cccDescriptor.isEnabled()}")
+                logWarning("notify: ${cccDescriptor.value} || ${cccDescriptor.value.toHexString()}")
                 return true
             } ?: internalContext.run {
                 Log.e(TAG,"${characteristic.uuid} doesn't contain the CCC descriptor!")
-                //signalEndOfOperation()
             }
         } ?: internalContext.run {
             Log.e(TAG,"Cannot find $uuid! Failed to enable notifications.")
-            //signalEndOfOperation()
         }
         return false
     }

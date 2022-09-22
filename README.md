@@ -1,4 +1,4 @@
-# ChillOut with Permissions in Android!
+# ChillOut with Bluetooth Low Energy in Android!
 
 <table style= padding:10px">
   <tr>
@@ -24,28 +24,30 @@ Simple:
 
 ### What need for work?
 1. Just small knowing about BLE
-
+2. DON`T Forget change BLE address from below EXAMPLE !!
 ```kotlin
 
  /**
  * Simple initilizing in Activity:
- */
+ */ 
+val bleStarter = BLEStarter(this)
 
-		bleStarter = BLEStarter(this)
-
-        CoroutineScope(lifecycleScope.coroutineContext).launch {
-            BLEStarter.bleCommandTrain.emit(mutableListOf(
-                StartScan(),
-                DelayOpera(6000L),
-                Connect("44:44:44:44:44:0C", isImportant = true),
-                StopScan(),
-                //ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
-                EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
-                EnableNotifications("44:44:44:44:44:0C", UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
-            ))
-        }
+CoroutineScope(lifecycleScope.coroutineContext).launch { 
+    BLEStarter.bleCommandTrain.emit(mutableListOf(
+        StartScan(), 
+        DelayOpera(6000L), 
+        Connect("44:44:44:44:44:0C", isImportant = true), 
+        StopScan(), 
+        ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
+        EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
+        EnableNotifications("44:44:44:44:44:0C", UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true))
+    )
+}
 
 ```
+#Tips
+1. DON`T Forget change BLE address from below EXAMPLE :) I am not joke, if you try this - you just dont may connect and make another operations
+2. 
 
 
 Example of BLE Server in Arduino (maybe needed for debugging):
