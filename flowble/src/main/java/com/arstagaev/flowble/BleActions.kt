@@ -188,6 +188,10 @@ class BleActions(
             }
 
             characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+                if (cccDescriptor.isEnabled()) {
+                    logInfo("Notification is already ENABLED ")
+                    return true
+                }
 
                 if (!bluetoothGatt?.setCharacteristicNotification(characteristic, true)!!) {
                     logError("$TAG setCharacteristicNotification failed for ${characteristic.uuid}")
@@ -227,6 +231,12 @@ class BleActions(
 
         val cccdUuid = UUID.fromString(BleParameters.CCC_DESCRIPTOR_UUID)
         characteristicTarget.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+
+            if (!cccDescriptor.isEnabled()) {
+                logInfo("Notification is already DISABLED ")
+                return true
+            }
+
             if (!bluetoothGatt!!.setCharacteristicNotification(characteristicTarget, false)) {
                 Log.e("ccc","setCharacteristicNotification failed for ${characteristicTarget.uuid}")
 
