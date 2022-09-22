@@ -14,8 +14,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.arstagaev.flowble.BLEStarter.Companion.outputBytesRead
 import com.arstagaev.flowble.BLEStarter.Companion.scanDevices
+import com.arstagaev.flowble.BleParameters.BLE_BATTERY_LEVEL_CHARACTERISTIC
+import com.arstagaev.flowble.BleParameters.BLE_BATTERY_VALUE
 import com.arstagaev.flowble.BleParameters.CONNECTED_DEVICE
 import com.arstagaev.flowble.BleParameters.SCAN_FILTERS
 import com.arstagaev.flowble.BleParameters.STATE_BLE
@@ -23,7 +24,7 @@ import com.arstagaev.flowble.BleParameters.TARGET_CHARACTERISTIC_NOTIFY
 import com.arstagaev.flowble.BleParameters.scanResultsX
 import com.arstagaev.flowble.gentelman_kit.*
 import com.arstagaev.flowble.models.StateBle
-import com.arstagaev.liteble.models.ScannedDevice
+import com.arstagaev.flowble.models.ScannedDevice
 import kotlinx.coroutines.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -272,12 +273,10 @@ class BleActions(
         if (scanning)
             return true
 
-        Log.w(TAG,"SCAN_FILTERS: ${SCAN_FILTERS.joinToString()}   Filters isEmpty: ${SCAN_FILTERS.isEmpty()}")
+        logWarning("$TAG SCAN_FILTERS: ${SCAN_FILTERS.joinToString()}   Filters isEmpty: ${SCAN_FILTERS.isEmpty()}")
 
         if (btAdapter == null) {
-            //delay(3000)
-            Log.w(TAG,"BT ADAPTER IS NULL!!")
-            print("BTADPRTER is NULL!!!")
+            logError("Bluetooth Adapter is NULL!!!")
             return false
         }
 
@@ -305,7 +304,7 @@ class BleActions(
 
 
         scanning = true
-        println("Scanning is now: ${scanning}")
+
         return scanning
     }
 
@@ -372,6 +371,39 @@ class BleActions(
             return false
         }
         return true
+    }
+
+    fun getBatteryLevel() : Boolean {
+        val batteryLevelCharacteristic = bluetoothGatt?.findCharacteristic(UUID.fromString(BLE_BATTERY_LEVEL_CHARACTERISTIC))
+        if (batteryLevelCharacteristic?.isReadable() == true) {
+
+            try {
+                try {
+                    BLE_BATTERY_VALUE = Integer.parseInt(bytesToHex(batteryLevelCharacteristic.value), 16).toString()
+                }catch (e: Exception) {
+                    Log.e("ERROR","NULL BLE_BATTERY")
+                }
+                logInfo("Ble Battery Characteristic: ${bytesToHex(batteryLevelCharacteristic.value)} ~ ${batteryLevelCharacteristic.value.toHexString()}")
+                return true
+
+            }catch (e:Exception) {
+                logError("Ble Battery Characteristic: ${e.message} !!")
+            }
+        }
+        return false
+    }
+
+    fun unBondDeviceFromPhone(address: String) : Boolean {
+        if (bluetoothManager?.weHaveDevice(address) == true) {
+            try {
+
+                bluetoothGatt?.device?.removeBond()
+                return true
+            } catch (e: Exception) {
+                logError("Error in unbonding: ${e.message} ")
+            }
+        }
+        return false
     }
 
 

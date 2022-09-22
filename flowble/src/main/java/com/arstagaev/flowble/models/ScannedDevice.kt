@@ -1,4 +1,4 @@
-package com.arstagaev.liteble.models
+package com.arstagaev.flowble.models
 
 import android.bluetooth.BluetoothDevice
 

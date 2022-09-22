@@ -4,14 +4,13 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.os.Build
-import com.arstagaev.flowble.PermissionEva.Companion.requestToPermission
 import com.arstagaev.flowble.enums.*
 import com.arstagaev.flowble.enums.DelayOpera
 import com.arstagaev.flowble.gentelman_kit.hasPermission
 import com.arstagaev.flowble.gentelman_kit.logAction
 import com.arstagaev.flowble.gentelman_kit.logError
 import com.arstagaev.flowble.models.CharacterCarrier
-import com.arstagaev.liteble.models.ScannedDevice
+import com.arstagaev.flowble.models.ScannedDevice
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -71,16 +70,19 @@ class BLEStarter(ctx : Context) {
         }
     }
 
-    fun isBluetoothEnabled(): Boolean {
-        var result = true
-        CoroutineScope(CoroutineName("permission")).launch {
-            if (bleActions?.btAdapter?.isEnabled == false) {
-                requestToPermission.emit(BlePermissions.BLUETOOTH_ON)
-                result = false
-            }
+    private fun isBluetoothEnabled(): Boolean {
+        return if ( bleActions?.btAdapter?.isEnabled == true ) {
+
+            true
+        }else {
+            logError("Bluetooth is NOT enabled !!")
+            logError("Bluetooth is NOT enabled !!")
+            logError("Bluetooth is NOT enabled !!")
+            logError("Bluetooth is NOT enabled !!")
+
+            false
         }
 
-        return result
     }
 
 
@@ -121,18 +123,22 @@ class BLEStarter(ctx : Context) {
             is DisableNotifications -> with(operation) {
                 return bleActions?.disableNotifications(uuid = characteristicUuid)
             }
-
+            // Experimental:
             is GetBatteryLevel -> with(operation) {
-                //TODO not implemented
-                return false
+                return bleActions?.getBatteryLevel()
             }
-            is ForceStop -> with(operation) {
+            // Experimental:
+            is UnBondDeviceFromPhone -> with(operation) {
+                return bleActions?.unBondDeviceFromPhone(address)
+            }
+
+
+            is DisableBleManager -> with(operation) {
                 return bleActions?.disableBLEManager()
             }
             is DelayOpera -> with(operation) {
                 delay(duration ?: 0)
                 return true
-                //shared_1.resetReplayCache() // ?
             }
         }
         return false
@@ -191,7 +197,5 @@ class BLEStarter(ctx : Context) {
         var outputBytesRead           = MutableSharedFlow<CharacterCarrier>(10,0, BufferOverflow.SUSPEND)
 
         var servicesCharacteristics   = MutableSharedFlow<MutableList<CharacterCarrier>>(10,0, BufferOverflow.SUSPEND)
-        // setup in activity, chain with him by lifecycle and run if needed:
-        //var requestToPermission = MutableSharedFlow<BlePermissions>(5,0, BufferOverflow.SUSPEND)
     }
 }

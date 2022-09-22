@@ -1,11 +1,12 @@
 
 package com.arstagaev.flowble
 
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
+import android.Manifest
+import android.annotation.SuppressLint
+import android.bluetooth.*
+import android.content.pm.PackageManager
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import com.arstagaev.flowble.gentelman_kit.logAction
 import com.arstagaev.flowble.gentelman_kit.logError
 import com.arstagaev.flowble.gentelman_kit.logInfo
@@ -66,6 +67,21 @@ fun BluetoothGatt.findDescriptor(uuid: UUID): BluetoothGattDescriptor? {
         }
     }
     return null
+}
+
+@SuppressLint("MissingPermission")
+fun BluetoothManager.weHaveDevice(inputAddress: String) : Boolean {
+    if (adapter == null) return false
+
+    var listOfDevices = getConnectedDevices(BluetoothProfile.GATT)
+    var weHaveDevice = false
+    listOfDevices.forEach {
+        if (it.address == inputAddress) {
+            weHaveDevice = true
+        }
+
+    }
+    return weHaveDevice
 }
 
 // BluetoothGattCharacteristic

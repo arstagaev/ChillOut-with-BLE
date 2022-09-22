@@ -95,11 +95,17 @@ data class GetBatteryLevel(
     override val isImportant: Boolean = false
 ) : BleTarget()
 
+/** */
+data class UnBondDeviceFromPhone(
+    override val address: String,
+    override val isImportant: Boolean = false
+) : BleTarget()
+
 /** DelayOpera..tion */
 data class DelayOpera(
     val duration: Long, override val isImportant: Boolean = true
 ) : BleOperation()
 
 /** */
-class ForceStop(override val isImportant: Boolean = true) : BleOperation()
+class DisableBleManager(override val isImportant: Boolean = true) : BleOperation()
 

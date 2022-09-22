@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.le.ScanFilter
 import com.arstagaev.flowble.enums.BleOperations_2
-import com.arstagaev.liteble.models.ScannedDevice
+import com.arstagaev.flowble.models.ScannedDevice
 import com.arstagaev.flowble.models.StateBle
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.*
@@ -31,4 +31,7 @@ object BleParameters {
 
     var CONNECTED_DEVICE : BluetoothDevice? = null
     var BLE_STATUS = -1
+
+    var BLE_BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb"
+    var BLE_BATTERY_VALUE = "-1"
 }

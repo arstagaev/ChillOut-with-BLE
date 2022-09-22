@@ -21,10 +21,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 open class BleManager(
-    ctx : Context? = null,
-//    override var bluetoothGattCallback: BluetoothGattCallback,
-//    override var bluetoothLeScanner: BluetoothLeScanner,
-//    override var leScanCallback: ScanCallback
+    ctx : Context? = null
 )  {
 
     private val TAG = BleManager::class.qualifiedName
