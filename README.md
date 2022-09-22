@@ -16,10 +16,11 @@ Bonus functional: unbondig, default method to know battery level and etc.
 ### How to Use?
 ---
 Simple:
+
 0. Accept all permissions in your app for BLE (need for all projects who use this feature)
 1. Initialize core of lib
-2. Launch Coroutine with initialized array of commands inside in Flow (`bleCommandTrain`) for your BLE adapter
-..
+2. Launch Coroutine with initialized array of commands inside in Flow (`bleCommandTrain`) for your BLE adapter  
+..  
 3. PROFIT!
 
 ### What need for work?
@@ -40,14 +41,14 @@ CoroutineScope(lifecycleScope.coroutineContext).launch {
         StopScan(), 
         ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
         EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
-        EnableNotifications("44:44:44:44:44:0C", UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true))
+        DisableNotifications("44:44:44:44:44:0C", UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true))
     )
 }
 
 ```
 #Tips
 1. DON`T Forget change BLE address from below EXAMPLE :) I am not joke, if you try this - you just dont may connect and make another operations
-2. 
+2. You just need setup in commands uuid of characteristics, NOT uuid of services (because lib can find needed characteristic without knowing services)
 
 
 Example of BLE Server in Arduino (maybe needed for debugging):
