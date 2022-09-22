@@ -27,21 +27,8 @@ import java.util.UUID
 
 class MainActivity : ComponentActivity() {
 
-    //val bluetoothManager = getSystemService<BluetoothManager>()
-    //?: throw IllegalStateException("BluetoothManager not found")
 
-
-    // From the previous section:
-    lateinit var bluetoothManager : BluetoothManager
-    lateinit var btAdapter: BluetoothAdapter
-    //val bluetoothLeScanner by lazy {  btAdapter.bluetoothLeScanner }
     var bleStarter : BLEStarter? = null
-    private val requestMultiplePermissions =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            permissions.entries.forEach {
-                Log.d("test006", "${it.key} = ${it.value}")
-            }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,65 +44,26 @@ class MainActivity : ComponentActivity() {
 
         PermissionBlock(this).launch()
         bleStarter = BLEStarter(this)
-//        CoroutineScope(CoroutineName("opp")).async {
-//            println(">>>>> 0000")
-//            PermissionEva.requestToPermission.collectIndexed { index, value ->
-//                println(">>>>> 1111  ${value}")
-//
-//                if (!this@MainActivity.hasPermission(value)) {
-//                    PermissionEva.requestToPermission.emit(value)
-//                    delay(100)
-//
-//                }
-//                delay(3000)
-//                this@MainActivity.requestPermission(value, (0..100).random())
-//
-//                delay(6000)
-//
-//
-//                println(">>>>> 2222")
-//            }
-//
-//            println(">>>>> 3333")
-//
-//        }
-        CoroutineScope(CoroutineName("permission_act")).async {
 
+        CoroutineScope(lifecycleScope.coroutineContext).launch {
+            BLEStarter.bleCommandTrain.emit(mutableListOf(
+                StartScan(),
+                Delay(6000L),
+                Connect("44:44:44:44:44:0C", isImportant = true),
+                StopScan(),
+                //ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
+                EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
+                EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
+                //BleOperations.DELAY.also { it.duration = 1000 },
+            ))
         }
 
-        //bleStarter.letsGO()
-        if (true) {
-
-            CoroutineScope(lifecycleScope.coroutineContext).launch {
-                BLEStarter.bleCommandTrain.emit(mutableListOf(
-                    StartScan(),
-                    Delay(6000L),
-                    Connect("44:44:44:44:44:0C", isImportant = true),
-                    StopScan(),
-                    //ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
-                    EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
-                    EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
-                    //BleOperations.DELAY.also { it.duration = 1000 },
-                ))
-//            BLEStarter.shared_1.emit(mutableListOf(
-//                BleOperations.CONNECT,
-//                BleOperations.DELAY.also { it.duration = 1000 },
-//                BleOperations.DELAY.also { it.duration = 1000 },
-//                BleOperations.DELAY.also { it.duration = 1000 },
-//                BleOperations.DISCONNECT.also { it.duration = 1000 }
-//            ))
-            }
-
-            CoroutineScope(lifecycleScope.coroutineContext).launch {
-                BLEStarter.outputBytesNotifyIndicate.collect {
-                    logWarning("Result: ${bytesToHex(it.value!!)}")
-                }
+        CoroutineScope(lifecycleScope.coroutineContext).launch {
+            BLEStarter.outputBytesNotifyIndicate.collect {
+                logWarning("Result: ${bytesToHex(it.value!!)}")
             }
         }
 
-//        var bl_connect = mutableStateOf(false)
-//        var bl_connect_already = false
-//        var bl_location = false
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 //            requestMultiplePermissions.launch(arrayOf(
 //                Manifest.permission.BLUETOOTH_SCAN,
@@ -198,9 +146,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        //frop(this)
-        //scanLeDevice()
-        //bluetoothLeScanner.startScan(leScanCallback)
     }
 
     // Stops scanning after 10 seconds.
@@ -208,9 +153,6 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
 
         super.onDestroy()
-
-
-
 
     }
 }

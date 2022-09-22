@@ -11,6 +11,7 @@ import com.arstagaev.flowble.enums.*
 import com.arstagaev.flowble.enums.Delay
 import com.arstagaev.flowble.gentelman_kit.hasPermission
 import com.arstagaev.flowble.gentelman_kit.logAction
+import com.arstagaev.flowble.gentelman_kit.logError
 import com.arstagaev.flowble.models.CharacterCarrier
 import com.arstagaev.liteble.models.ScannedDevice
 import kotlinx.coroutines.*
@@ -21,12 +22,15 @@ import kotlinx.coroutines.flow.collectIndexed
 
 
 class BLEStarter(ctx : Context) {
+
     private val TAG = "BLEStarter"
     var bleActions: BleActions? = null
     private var lastSuccess = false
     private var internalContext: Context? = ctx
+    private var jobBleLifecycle = Job()
     //private var coroutineContext: Context? = null
     var btAdapter: BluetoothAdapter? = null
+
 
     init {
         checkPermissions()
@@ -38,7 +42,7 @@ class BLEStarter(ctx : Context) {
 
     private fun bookingMachine() {
         logAction("START!!")
-        CoroutineScope(Dispatchers.Default).async {
+        CoroutineScope(jobBleLifecycle + CoroutineName("Ble Starter: bookingMachine()")).async {
             bleCommandTrain.collectIndexed { index, operation ->
                 async {
 
@@ -144,41 +148,41 @@ class BLEStarter(ctx : Context) {
                 && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false
                 && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false) {
 
-                //REVERT_WORK_CAUSE_PERMISSION = false
                 return true
             }else {
 
-                Log.e(TAG,"########################################")
-                Log.e(TAG,"# Error: Don`t have permission for BLE #")
-                Log.e(TAG,"# Error: Don`t have permission for BLE #")
-                Log.e(TAG,"# Error: Don`t have permission for BLE #")
-                Log.e(TAG,"# ACCESS_FINE_LOCATION:${internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
-                Log.e(TAG,"# BLUETOOTH_SCAN:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false} #")
-                Log.e(TAG,"# BLUETOOTH_CONNECT:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false} #")
-                Log.e(TAG,"########################################")
+                logError("$TAG ########################################")
+                logError("$TAG # Error: Don`t have permission for BLE #")
+                logError("$TAG # Error: Don`t have permission for BLE #")
+                logError("$TAG # Error: Don`t have permission for BLE #")
+                logError(TAG+" # ACCESS_FINE_LOCATION:${internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
+                logError(TAG+" # BLUETOOTH_SCAN:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false} #")
+                logError(TAG+" # BLUETOOTH_CONNECT:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false} #")
+                logError("$TAG ########################################")
                 return false
                 //REVERT_WORK_CAUSE_PERMISSION = true
             }
         }else {
             if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false) {
 
-                //REVERT_WORK_CAUSE_PERMISSION = false
                 return true
             }else {
 
-                Log.e(TAG,"########################################")
-                Log.e(TAG,"# Error: Don`t have permission for BLE #")
-                Log.e(TAG,"# Error: Don`t have permission for BLE #")
-                Log.e(TAG,"# Error: Don`t have permission for BLE #")
-                Log.e(TAG,"# ACCESS_FINE_LOCATION:${internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
-                Log.e(TAG,"########################################")
+                logError("$TAG ########################################")
+                logError("$TAG # Error: Don`t have permission for BLE #")
+                logError("$TAG # Error: Don`t have permission for BLE #")
+                logError("$TAG # Error: Don`t have permission for BLE #")
+                logError(TAG+ " # ACCESS_FINE_LOCATION:${internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
+                logError("$TAG ########################################")
                 return false
-                //REVERT_WORK_CAUSE_PERMISSION = true
             }
         }
     }
 
-    suspend fun forceStop() = bleActions?.disableBLEManager()
+    suspend fun forceStop() {
+        jobBleLifecycle.cancel()
+        bleActions?.disableBLEManager()
+    }
 
     companion object {
         var bleCommandTrain = MutableSharedFlow<MutableList<BleOperation>>(5,0, BufferOverflow.SUSPEND)

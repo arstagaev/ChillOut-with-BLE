@@ -1,18 +1,3 @@
-/*
- * Copyright 2019 Punch Through Design LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package com.arstagaev.flowble
 
@@ -21,6 +6,9 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.util.Log
+import com.arstagaev.flowble.gentelman_kit.logAction
+import com.arstagaev.flowble.gentelman_kit.logError
+import com.arstagaev.flowble.gentelman_kit.logInfo
 import java.util.Locale
 import java.util.UUID
 
@@ -50,7 +38,7 @@ fun BluetoothGatt.printGattTable() {
             }
             description
         }
-        Log.i("ccc","Service ${service.uuid}\nCharacteristics:\n$characteristicsTable")
+        logInfo("Service ${service.uuid}\nCharacteristics:\n$characteristicsTable")
     }
 }
 
@@ -59,11 +47,11 @@ fun BluetoothGatt.findCharacteristic(uuid: UUID): BluetoothGattCharacteristic? {
         service.characteristics?.firstOrNull { characteristic ->
             characteristic.uuid == uuid
         }?.let { matchingCharacteristic ->
-            println(" I FOUND CHARACTERISTIC: ${matchingCharacteristic.uuid.toString()}")
+            logInfo(" I FOUND CHARACTERISTIC: ${matchingCharacteristic.uuid.toString()}")
             return matchingCharacteristic
         }
     }
-    println(" I DONT FOUND CHARACTERISTIC:")
+    logInfo(" I DONT FOUND CHARACTERISTIC:")
     return null
 }
 
@@ -155,12 +143,10 @@ fun BluetoothDevice.removeBond() {
     try {
         this.javaClass.getMethod("removeBond").invoke(this)
     }catch ( e: Exception) {
-        Log.e("unbond","unbond NOT SUCCESS >> ${e.message} <<")
-        Log.e("unbond","unbond NOT SUCCESS >> ${e.message} <<")
-        Log.e("unbond","unbond NOT SUCCESS >> ${e.message} <<")
-        Log.e("unbond","unbond NOT SUCCESS >> ${e.message} <<")
-        Log.e("unbond","unbond NOT SUCCESS >> ${e.message} <<")
-        Log.e("unbond","unbond NOT SUCCESS >> ${e.message} <<")
-    }
 
+        repeat(10) {
+            logError("unbond NOT SUCCESS >> ${e.message} <<")
+        }
+
+    }
 }
