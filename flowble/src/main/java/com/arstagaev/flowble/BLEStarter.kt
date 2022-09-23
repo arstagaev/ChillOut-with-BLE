@@ -72,24 +72,21 @@ class BLEStarter(ctx : Context) {
 
     private fun isBluetoothEnabled(): Boolean {
         return if ( bleActions?.btAdapter?.isEnabled == true ) {
-
             true
         }else {
             logError("Bluetooth is NOT enabled !!")
             logError("Bluetooth is NOT enabled !!")
             logError("Bluetooth is NOT enabled !!")
             logError("Bluetooth is NOT enabled !!")
-
             false
         }
-
     }
 
 
 
-    @Synchronized // really need?
+    @Synchronized
     private suspend fun selector(operation: BleOperation) : Boolean? {
-        logAction("New Operation: ${operation.toString()} >>>>")
+        logAction("New Operation: ${operation} >>>>")
 
         when(operation) {
             is StartScan -> with(operation) {
@@ -151,7 +148,6 @@ class BLEStarter(ctx : Context) {
             if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false
                 && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false
                 && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false) {
-
                 return true
             }else {
 
@@ -164,14 +160,12 @@ class BLEStarter(ctx : Context) {
                 logError(TAG+" # BLUETOOTH_CONNECT:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false} #")
                 logError("$TAG ########################################")
                 return false
-                //REVERT_WORK_CAUSE_PERMISSION = true
             }
         }else {
             if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false) {
 
                 return true
             }else {
-
                 logError("$TAG ########################################")
                 logError("$TAG # Error: Don`t have permission for BLE #")
                 logError("$TAG # Error: Don`t have permission for BLE #")

@@ -46,7 +46,28 @@ CoroutineScope(lifecycleScope.coroutineContext).launch {
 }
 
 ```
-#Tips
+
+How to get a Git project into your build:
+
+```
+//Step 1. Add the JitPack repository to your build file
+//Add it in your root build.gradle at the end of repositories:
+
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+	
+//Step 2. Add the dependency
+
+	dependencies {
+	        implementation 'com.github.arstagaev:ChillOut-with-BLE-Library:Tag'
+	}
+	
+```
+### Tips
 1. DON`T Forget change BLE address from below EXAMPLE :) I am not joke, if you try this - you just dont may connect and make another operations
 2. You just need setup in commands uuid of characteristics, NOT uuid of services (because lib can find needed characteristic without knowing services)
 
