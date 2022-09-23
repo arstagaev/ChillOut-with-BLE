@@ -9,9 +9,9 @@
 ### For What?
 ---
 
-With ChillOutBLE Library you can setup ble connection, writing, reading characteristics, make enable/disable of notifications in few minutes :) Based on Coroutines and Flow.
+With ChillOutBLE Library you can setup BLE connection, writing, reading characteristics, make enable/disable of notifications in few minutes :) Based on Coroutines and Flow.
 
-Bonus functional: unbondig, default method to know battery level and etc.
+Bonus functional: unbonding, method to know battery level and etc.
 
 ### How to Use?
 ---
@@ -67,6 +67,20 @@ dependencies {
 }
 	
 ```
+### Available BLE operations in our Lib:
+1. StartScan()
+2. StopScan()
+3. Connect()
+4. Disconnect()
+5. WriteToCharacteristic()
+6. ReadFromCharacteristic()
+7. EnableNotifications()
+8. DisableNotifications()
+9. GetBatteryLevel()
+10. UnBondDeviceFromPhone()
+11. DelayOpera() // just delay, added for not repeating with other deafult Delay classes
+
+Don`t forget add parameters in Operations (like is important or not operation, time delay, sending bytes and etc.)
 ### Tips
 1. DON`T Forget change BLE address from below EXAMPLE :) I am not joke, if you try this - you just dont may connect and make another operations
 2. You just need setup in commands uuid of characteristics, NOT uuid of services (because lib can find needed characteristic without knowing services)
