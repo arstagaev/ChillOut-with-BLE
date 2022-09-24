@@ -25,7 +25,7 @@ Simple:
 
 ### What need for work?
 1. Just small knowing about BLE
-2. DON`T Forget change BLE address from below EXAMPLE !!
+2. DON`T Forget CHANGE BLE ADDRESS & UUID characteristic from below example !!
 ```kotlin
 
  /**
@@ -81,7 +81,7 @@ dependencies {
 8. DisableNotifications()
 9. GetBatteryLevel()
 10. UnBondDeviceFromPhone()
-11. DelayOpera() // just delay, added for not repeating with other deafult Delay classes
+11. Retard() // just delay, added for not repeating with other default Delay classes
 
 Don`t forget add parameters in Operations (like is important or not operation, time delay, sending bytes and etc.)
 ### Tips
@@ -92,3 +92,13 @@ Don`t forget add parameters in Operations (like is important or not operation, t
 Example of BLE Server in Arduino (maybe needed for debugging):
 
 https://wikihandbk.com/wiki/ESP32:%D0%9F%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B/Bluetooth_Low_Energy:_%D1%83%D0%B2%D0%B5%D0%B4%D0%BE%D0%BC%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F
+
+### Contribute 
+
+
+### License
+
+This software is available under the Apache License 2.0, allowing you to use the library in your applications. Free to any kind use.
+
+If you want to help (or have some suggestions) with the open source project, please contact😉: arsen@revolna.com
+

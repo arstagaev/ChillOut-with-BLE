@@ -104,9 +104,6 @@ class MainActivity : ComponentActivity() {
 
     // How to use library:
     private fun launchLib() {
-//        bleStarter = BLEStarter(this).also {
-//            it.showOperationToasts = true // show logs in Toast
-//        }
         CoroutineScope(lifecycleScope.coroutineContext).launch {
             BLEStarter.bleCommandTrain.emit(mutableListOf(
                 StartScan(),
