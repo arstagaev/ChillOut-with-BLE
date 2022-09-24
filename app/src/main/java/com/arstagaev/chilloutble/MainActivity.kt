@@ -120,7 +120,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun stopLib() {
+    private fun stopLib() {
         CoroutineScope(CoroutineName("stop")+ (lifecycleScope.coroutineContext)).launch {
             bleStarter?.forceStop()
         }
