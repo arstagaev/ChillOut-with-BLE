@@ -1,13 +1,10 @@
 
-package com.arstagaev.flowble
+package com.arstagaev.flowble.extensions
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.*
-import android.content.pm.PackageManager
 import android.util.Log
-import androidx.core.app.ActivityCompat
-import com.arstagaev.flowble.gentelman_kit.logAction
+import com.arstagaev.flowble.constants.AllGattDescriptors.ClientCharacteristicConfiguration
 import com.arstagaev.flowble.gentelman_kit.logError
 import com.arstagaev.flowble.gentelman_kit.logInfo
 import java.util.Locale
@@ -148,7 +145,7 @@ fun BluetoothGattDescriptor.character(type: ByteArray): Boolean =
  * is a Client Characteristic Configuration Descriptor.
  */
 fun BluetoothGattDescriptor.isCccd() =
-    uuid.toString().toUpperCase(Locale.US) == CCC_DESCRIPTOR_UUID.toUpperCase(Locale.US)
+    uuid.toString().toUpperCase(Locale.US) == ClientCharacteristicConfiguration.toUpperCase(Locale.US)
 
 // ByteArray
 

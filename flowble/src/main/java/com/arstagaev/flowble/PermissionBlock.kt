@@ -1,15 +1,11 @@
 package com.arstagaev.flowble
 
 import android.Manifest
-import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import com.arstagaev.flowble.gentelman_kit.hasPermission
-import com.arstagaev.flowble.gentelman_kit.requestPermission
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import com.arstagaev.flowble.extensions.hasPermission
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class PermissionBlock(componentActivity: ComponentActivity) : ComponentActivity() {

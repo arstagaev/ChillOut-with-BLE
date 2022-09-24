@@ -1,4 +1,4 @@
-package com.arstagaev.flowble.gentelman_kit
+package com.arstagaev.flowble.extensions
 
 import android.app.Activity
 import android.bluetooth.BluetoothGattCharacteristic
@@ -17,12 +17,12 @@ fun Context.hasPermission(permissionType: String): Boolean {
 }
 
 
-//BLE
-fun BluetoothGattCharacteristic.isIndicatable(): Boolean =
-    containsProperty(BluetoothGattCharacteristic.PROPERTY_INDICATE)
-
-fun BluetoothGattCharacteristic.isNotifiable(): Boolean =
-    containsProperty(BluetoothGattCharacteristic.PROPERTY_NOTIFY)
-
-fun BluetoothGattCharacteristic.containsProperty(property: Int): Boolean =
-    properties and property != 0
+////BLE
+//fun BluetoothGattCharacteristic.isIndicatable(): Boolean =
+//    containsProperty(BluetoothGattCharacteristic.PROPERTY_INDICATE)
+//
+//fun BluetoothGattCharacteristic.isNotifiable(): Boolean =
+//    containsProperty(BluetoothGattCharacteristic.PROPERTY_NOTIFY)
+//
+//fun BluetoothGattCharacteristic.containsProperty(property: Int): Boolean =
+//    properties and property != 0

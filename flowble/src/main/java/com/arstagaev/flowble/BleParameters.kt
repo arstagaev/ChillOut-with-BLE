@@ -17,13 +17,8 @@ object BleParameters {
     var SCAN_FILTERS = mutableListOf<ScanFilter>()
     var GATT_SERVICES :  List<BluetoothGattService>? = null
 
-    var operationQueue = ArrayList<BleOperations_2>()
-
     var TARGET_CHARACTERISTIC_NOTIFY : UUID? = null
 
-    var CHARACTERISTIC_UUID_1 = "zero" // need to setup
-    var CHARACTERISTIC_UUID_2 = "zero" // need to setup
-    var CCC_DESCRIPTOR_UUID   = "zero" // need to setup
 
     const val ACTION_GATT_CONNECTED           = "com.example.bluetooth.le.ACTION_GATT_CONNECTED"
     const val ACTION_GATT_DISCONNECTED        = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED"

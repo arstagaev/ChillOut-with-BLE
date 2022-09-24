@@ -35,14 +35,17 @@ val bleStarter = BLEStarter(this)
 
 CoroutineScope(lifecycleScope.coroutineContext).launch { 
     BLEStarter.bleCommandTrain.emit(mutableListOf(
-        StartScan(), 
-        DelayOpera(6000L), 
-        Connect("44:44:44:44:44:0C", isImportant = true), 
-        StopScan(), 
-        ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
-        EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
-        DisableNotifications("44:44:44:44:44:0C", UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true))
-    )
+        StartScan(),
+        Retard(6000L),
+        Connect("44:44:44:44:44:0C"),
+        Retard(1000L),
+        StopScan(),
+        ReadFromCharacteristic("44:44:44:44:44:0C", characteristicUuid = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")),
+        Retard(1000L),
+        EnableNotifications("44:44:44:44:44:0C", characteristicUuid = UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8")),
+        Retard(1000L),
+        DisableNotifications("44:44:44:44:44:0C", characteristicUuid = UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"))
+    ))
 }
 
 ```
@@ -63,7 +66,7 @@ allprojects {
 Step 2. Add the dependency
 ```
 dependencies {
-        implementation 'com.github.arstagaev:ChillOut-with-BLE-Library:Tag'
+        implementation 'com.github.arstagaev:ChillOut-with-BLE-Library:0.1'
 }
 	
 ```

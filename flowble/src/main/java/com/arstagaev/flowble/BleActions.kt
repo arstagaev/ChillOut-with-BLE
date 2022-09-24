@@ -22,7 +22,11 @@ import com.arstagaev.flowble.BleParameters.SCAN_FILTERS
 import com.arstagaev.flowble.BleParameters.STATE_BLE
 import com.arstagaev.flowble.BleParameters.TARGET_CHARACTERISTIC_NOTIFY
 import com.arstagaev.flowble.BleParameters.scanResultsX
+import com.arstagaev.flowble.constants.AllGattDescriptors.ClientCharacteristicConfiguration
+import com.arstagaev.flowble.extensions.*
 import com.arstagaev.flowble.gentelman_kit.*
+import com.arstagaev.flowble.extensions.isIndicatable
+import com.arstagaev.flowble.extensions.isNotifiable
 import com.arstagaev.flowble.models.StateBle
 import com.arstagaev.flowble.models.ScannedDevice
 import kotlinx.coroutines.*
@@ -113,14 +117,15 @@ class BleActions(
         if (CONNECTED_DEVICE != null && CONNECTED_DEVICE?.address == address) {
             return true
         }
-        //check if we don`t use demo
+
+        //TODO: check if we don`t use demo
         if (address == "44:44:44:44:44:0C") {
+
             repeat(10) {
-                logWarning("!! ChillOutBLE: YOU USING DEMO MAC-ADDRESS, change to real one !!")
+                logError("!! ChillOutBLE: YOU USING DEMO MAC-ADDRESS, change to real one !!")
             }
 
         }
-
 
 
         logAction("connect to ${address} <<<<<<<<<<<<<<<<<<<<")
@@ -173,8 +178,8 @@ class BleActions(
         logAction("$TAG enableNotifications ")
 
         bluetoothGatt?.findCharacteristic(uuid)?.let { characteristic ->
-            //val cccdUuid = characteristic.descriptors[0].uuid ?: UUID.fromString(CCC_DESCRIPTOR_UUID)
-            val cccdUuid = UUID.fromString(CCC_DESCRIPTOR_UUID)
+
+            val cccdUuid = getUUID(ClientCharacteristicConfiguration)
 
             val payload = when {
                 characteristic.isIndicatable() ->
@@ -188,6 +193,8 @@ class BleActions(
             }
 
             characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+                logInfo("Notification is already ${cccDescriptor.isEnabled()} ")
+
                 if (cccDescriptor.isEnabled()) {
                     logInfo("Notification is already ENABLED ")
                     return true
@@ -198,15 +205,12 @@ class BleActions(
                     return false
                 }
 
-                logWarning("notify: ${cccDescriptor.isEnabled()}")
 
                 cccDescriptor.value = payload
                 bluetoothGatt?.writeDescriptor(cccDescriptor)
                 TARGET_CHARACTERISTIC_NOTIFY = uuid
                 logAction("Success Enable Notification !! ")
 
-                logWarning("notify:  ${cccDescriptor.isEnabled()}")
-                logWarning("notify: ${cccDescriptor.value} || ${cccDescriptor.value.toHexString()}")
                 return true
             } ?: internalContext.run {
                 Log.e(TAG,"${characteristic.uuid} doesn't contain the CCC descriptor!")
@@ -223,13 +227,12 @@ class BleActions(
         val characteristicTarget = bluetoothGatt?.findCharacteristic(uuid = uuid)//getCharacteristic(uuid) ?: return false
 
         if (characteristicTarget == null) {
-            Log.e("ccc","characteristic == null !!!")
+            logError("characteristic == null !!!")
             return false
         }
-        Log.w(TAG,"disableNotifications()()()()()()")
 
+        val cccdUuid = getUUID(ClientCharacteristicConfiguration)
 
-        val cccdUuid = UUID.fromString(BleParameters.CCC_DESCRIPTOR_UUID)
         characteristicTarget.getDescriptor(cccdUuid)?.let { cccDescriptor ->
 
             if (!cccDescriptor.isEnabled()) {
@@ -237,22 +240,25 @@ class BleActions(
                 return true
             }
 
+
             if (!bluetoothGatt!!.setCharacteristicNotification(characteristicTarget, false)) {
-                Log.e("ccc","setCharacteristicNotification failed for ${characteristicTarget.uuid}")
+                logError("setCharacteristicNotification failed for ${characteristicTarget.uuid}")
 
                 return false
             }
 
             cccDescriptor.value = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+            logAction("Success Disable Notification !! ")
+
             return bluetoothGatt!!.writeDescriptor(cccDescriptor)
         } ?: internalContext.run {
-            Log.e("ccc","${characteristicTarget.uuid} doesn't contain the CCC descriptor!")
+            logError("${characteristicTarget.uuid} doesn't contain the CCC descriptor!")
             return false
         }
     }
     @SuppressLint("MissingPermission")
     fun writeDescriptor(descriptor: BluetoothGattDescriptor, payload: ByteArray) {
-        Log.i(TAG,"writeDescriptor starts  >> ${(bluetoothManager?.getConnectedDevices(
+        logInfo(TAG+"writeDescriptor starts  >> ${(bluetoothManager?.getConnectedDevices(
             BluetoothProfile.GATT)?.size ?: 0)}")
 
         if ((bluetoothManager?.getConnectedDevices(BluetoothProfile.GATT)?.size ?: 0) > 0) {
@@ -260,14 +266,13 @@ class BleActions(
             bluetoothGatt?.let { gatt ->
                 descriptor.value = payload
                 gatt.writeDescriptor(descriptor)
-            } //?: error("Not connected to a BLE device!")
+            } ?: error("Not connected to a BLE device!")
 
         } else {
-            Log.e(TAG,"// // Cant enable|disable notification !! ")
-            Log.e(TAG,"// // Cant enable|disable notification !! ")
-            Log.e(TAG,"// // Cant enable|disable notification !! ")
+            logError(TAG + "// // Cant enable|disable notification !! ")
+            logError(TAG + "// // Cant enable|disable notification !! ")
+            logError(TAG + "// // Cant enable|disable notification !! ")
             STATE_BLE = StateBle.NO_CONNECTED
-            //unBonding(isEmergencyReset = true)
         }
 
     }
@@ -290,7 +295,7 @@ class BleActions(
             return false
         }
 
-        Log.w(TAG,"bluetoothLeScanner>>> ${bluetoothLeScanner.toString()}")
+        logWarning(TAG+" bluetoothLeScanner>>> ${bluetoothLeScanner.toString()}")
 //        if (SCAN_FILTERS.isNotEmpty()) {
 //            bluetoothLeScanner.startScan(SCAN_FILTERS,scanSettings,leScanCallback)
 //            print("WITH SCAN FILTERS I Scan")
@@ -317,8 +322,6 @@ class BleActions(
 
         return scanning
     }
-
-
 
 
 
@@ -493,10 +496,13 @@ class BleActions(
         logWarning("disconnect From Device !!!")
 
         if (bluetoothGatt != null){
-            bluetoothGatt?.close()
             bluetoothGatt?.disconnect()
+            bluetoothGatt?.close()
+
             bluetoothGatt = null
+
             Log.w(TAG," disconnected FromDevice !!! ")
+
         }else {
             Log.w(TAG," bluetoothGatt is NULL ")
         }
