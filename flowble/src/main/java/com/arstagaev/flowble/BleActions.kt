@@ -18,6 +18,7 @@ import com.arstagaev.flowble.BLEStarter.Companion.scanDevices
 import com.arstagaev.flowble.BleParameters.BLE_BATTERY_LEVEL_CHARACTERISTIC
 import com.arstagaev.flowble.BleParameters.BLE_BATTERY_VALUE
 import com.arstagaev.flowble.BleParameters.CONNECTED_DEVICE
+import com.arstagaev.flowble.BleParameters.MULTI_CONNECT
 import com.arstagaev.flowble.BleParameters.SCAN_FILTERS
 import com.arstagaev.flowble.BleParameters.STATE_BLE
 import com.arstagaev.flowble.BleParameters.TARGET_CHARACTERISTIC_NOTIFY
@@ -114,9 +115,32 @@ class BleActions(
             logError("address is null or Empty<")
             return false
         }
-        if (CONNECTED_DEVICE != null && CONNECTED_DEVICE?.address == address) {
-            return true
+
+        bluetoothGatt?.connectedDevices?.forEachIndexed { index, bluetoothDevice ->
+
+            if (bluetoothDevice?.address == address) {
+                return true
+            }
+
         }
+
+        if (!MULTI_CONNECT) {
+            // check if not connected and have multi connect
+            if (bluetoothGatt?.connectedDevices?.isNotEmpty() == true) {
+                disconnectFromDevice()
+            }
+        }
+
+
+//        if (CONNECTED_DEVICE != null) {
+//
+//            if (CONNECTED_DEVICE?.address == address) {
+//                return true
+//            }else {
+//                CONNECTED_DEVICE
+//            }
+//
+//        }
 
         //TODO: check if we don`t use demo
         if (address == "44:44:44:44:44:0C") {
@@ -502,7 +526,7 @@ class BleActions(
             bluetoothGatt = null
 
             Log.w(TAG," disconnected FromDevice !!! ")
-
+            return true
         }else {
             Log.w(TAG," bluetoothGatt is NULL ")
         }

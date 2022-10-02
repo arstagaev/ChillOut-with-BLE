@@ -59,6 +59,7 @@ open class BleManager(
             when(newState) {
                 BluetoothProfile.STATE_DISCONNECTED  -> { Log.w("www", "state:  $newState  STATE_DISCONNECTED  ")
                     BleParameters.STATE_BLE = StateBle.NO_CONNECTED
+                    BleParameters.CONNECTED_DEVICE = null
                     //MSG = "STATE_DISCONNECTED"
                     //generateNameOfAllLogPerSession()
 

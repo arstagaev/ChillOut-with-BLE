@@ -4,6 +4,7 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.os.Build
+import com.arstagaev.flowble.BleParameters.showOperationToasts
 import com.arstagaev.flowble.enums.*
 import com.arstagaev.flowble.enums.Retard
 import com.arstagaev.flowble.extensions.hasPermission
@@ -27,7 +28,7 @@ class BLEStarter(ctx : Context) {
 
 
     var btAdapter: BluetoothAdapter? = null
-    var showOperationToasts = false
+
 
     init {
         checkPermissions()
