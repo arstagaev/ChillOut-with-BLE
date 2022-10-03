@@ -45,15 +45,13 @@ class MainActivity : ComponentActivity() {
 
         // here we get found devices after scanning:
         CoroutineScope(lifecycleScope.coroutineContext).launch {
-            var bleStartesr = BLEStarter(this@MainActivity)
             BLEStarter.scanDevices.collect {
                 logWarning("What I found: ${it}")
             }
         }
-        val asd  = BLEStarter(this@MainActivity)
+
         setContent {
             ChillOutBLETheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.White
@@ -121,7 +119,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun stopLib() {
-        CoroutineScope(CoroutineName("stop")+ (lifecycleScope.coroutineContext)).launch {
+        CoroutineScope(lifecycleScope.coroutineContext).launch {
             bleStarter?.forceStop()
         }
     }
@@ -145,9 +143,4 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
-    override fun onDestroy() {
-
-        super.onDestroy()
-
-    }
 }

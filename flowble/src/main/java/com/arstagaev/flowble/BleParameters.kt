@@ -29,8 +29,6 @@ object BleParameters {
     var BLE_BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb"
     var BLE_BATTERY_VALUE = "-1"
 
-    //setups:
-    var showOperationToasts = false
-    var MULTI_CONNECT = false
+
 
 }

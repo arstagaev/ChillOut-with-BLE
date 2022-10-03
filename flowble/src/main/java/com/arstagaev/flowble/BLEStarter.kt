@@ -4,7 +4,6 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.os.Build
-import com.arstagaev.flowble.BleParameters.showOperationToasts
 import com.arstagaev.flowble.enums.*
 import com.arstagaev.flowble.enums.Retard
 import com.arstagaev.flowble.extensions.hasPermission
@@ -26,26 +25,22 @@ class BLEStarter(ctx : Context) {
     private var internalContext: Context? = ctx
     private var jobBleLifecycle = Job()
 
-
     var btAdapter: BluetoothAdapter? = null
 
+    //setups:
+    var showOperationToasts = false
+    var multiConnect = false
 
     init {
         checkPermissions()
         bookingMachine()
-        bleActions = BleActions(internalContext)
+        bleActions = BleActions(internalContext).also {
+            it.multiConnect = multiConnect
+        }
         btAdapter = bleActions?.btAdapter
 
         countInitClass++
         checkNumberOfInstanceThisClass()
-    }
-
-    private fun checkNumberOfInstanceThisClass() {
-        if (countInitClass > 1) {
-            repeat(10) {
-                logError("Many times (${countInitClass}) initializing of BLEStarter class !! [Possible wrong work of BLE module]. Especially double/triple and etc. request to connect and so on")
-            }
-        }
     }
 
     private fun bookingMachine() {
@@ -104,7 +99,6 @@ class BLEStarter(ctx : Context) {
 
 
 
-    @Synchronized
     private suspend fun selector(operation: BleOperation) : Boolean? {
         logAction("New Operation: ${operation} >>>>")
 
@@ -159,12 +153,13 @@ class BLEStarter(ctx : Context) {
             }
 
 
-            is DisableBleManager -> with(operation) {
-                return bleActions?.disableBLEManager()
-            }
             is Retard -> with(operation) {
                 delay(duration ?: 0)
                 return true
+            }
+
+            is DisableBleManager -> with(operation) {
+                return bleActions?.disableBLEManager()
             }
         }
         return false
@@ -213,7 +208,23 @@ class BLEStarter(ctx : Context) {
             }
         }
         jobBleLifecycle.cancel()
+
         bleActions?.disableBLEManager()
+    }
+
+    /**
+     * Must work only one instance of BLEStarter - for stability of work
+     */
+    private fun checkNumberOfInstanceThisClass() {
+        if (countInitClass > 1) {
+            CoroutineScope(jobBleLifecycle).launch {
+                // set delay for to attract developer`s attention
+                delay(2000)
+                repeat(10) {
+                    logError("WARNING ! Many times (${countInitClass}) initializing of BLEStarter class !! [Possible wrong work of BLE module]. Especially double/triple and etc., request to connect and so on")
+                }
+            }
+        }
     }
 
     companion object {
@@ -225,5 +236,6 @@ class BLEStarter(ctx : Context) {
         var outputBytesRead           = MutableSharedFlow<CharacterCarrier>(10,0, BufferOverflow.SUSPEND)
 
         var servicesCharacteristics   = MutableSharedFlow<MutableList<CharacterCarrier>>(10,0, BufferOverflow.SUSPEND)
+
     }
 }

@@ -18,7 +18,6 @@ import com.arstagaev.flowble.BLEStarter.Companion.scanDevices
 import com.arstagaev.flowble.BleParameters.BLE_BATTERY_LEVEL_CHARACTERISTIC
 import com.arstagaev.flowble.BleParameters.BLE_BATTERY_VALUE
 import com.arstagaev.flowble.BleParameters.CONNECTED_DEVICE
-import com.arstagaev.flowble.BleParameters.MULTI_CONNECT
 import com.arstagaev.flowble.BleParameters.SCAN_FILTERS
 import com.arstagaev.flowble.BleParameters.STATE_BLE
 import com.arstagaev.flowble.BleParameters.TARGET_CHARACTERISTIC_NOTIFY
@@ -40,9 +39,11 @@ class BleActions(
 
     private val TAG = this::class.qualifiedName
     private var scanning = false
+    private var jobBleActionsLifecycle = Job()
     var activity: Activity? = null
     var REVERT_WORK_CAUSE_PERMISSION = false
     var scanResultsNewFoundedINTERNAL = arrayListOf<ScannedDevice>()
+    var multiConnect = false
 
     init {
         internalContext = ctx
@@ -124,7 +125,7 @@ class BleActions(
 
         }
 
-        if (!MULTI_CONNECT) {
+        if (!multiConnect) {
             // check if not connected and have multi connect
             if (bluetoothGatt?.connectedDevices?.isNotEmpty() == true) {
                 disconnectFromDevice()
@@ -352,7 +353,7 @@ class BleActions(
     @SuppressLint("MissingPermission")
     suspend fun stopScan(): Boolean {
         if (!scanning)
-            return false
+            return true
         Log.i(TAG,"Stop scan")
         bluetoothLeScanner?.stopScan(leScanCallback)
         scanning = false
@@ -448,7 +449,7 @@ class BleActions(
     // Callbacks                                            //
     //////////////////////////////////////////////////////////
     // Device scan callback.
-    private val leScanCallback: ScanCallback = object : ScanCallback() {
+    private var leScanCallback: ScanCallback = object : ScanCallback() {
 
         override fun onScanFailed(errorCode: Int) {
             super.onScanFailed(errorCode)
@@ -487,13 +488,10 @@ class BleActions(
 
                 }
                 scanResultsX.value?.sortByDescending { it.rssi }
-                GlobalScope.launch {
+                CoroutineScope(jobBleActionsLifecycle).launch {
                     scanDevices.emit(scanResultsX.value)
                 }
 
-//                GlobalScope.launch {
-//                    scanResultsX.emit(scanResultsNewFoundedINTERNAL)
-//                }
             } else { /** founded new device */
                 scanResultsNewFoundedINTERNAL.add(
                     ScannedDevice(
@@ -503,7 +501,7 @@ class BleActions(
                 )
                 scanResultsX.value =scanResultsNewFoundedINTERNAL
                 //scanResultsNewFoundedINTERNAL.sortByDescending { it.rssi }
-                GlobalScope.launch {
+                CoroutineScope(jobBleActionsLifecycle).launch {
                     scanDevices.emit(scanResultsNewFoundedINTERNAL)
                 }
 
@@ -521,28 +519,29 @@ class BleActions(
 
         if (bluetoothGatt != null){
             bluetoothGatt?.disconnect()
-            bluetoothGatt?.close()
-
-            bluetoothGatt = null
 
             Log.w(TAG," disconnected FromDevice !!! ")
             return true
-        }else {
+        } else {
             Log.w(TAG," bluetoothGatt is NULL ")
         }
 
-        return false
+        return true
     }
+
+    @SuppressLint("MissingPermission")
     suspend fun disableBLEManager(): Boolean {
-
-//        if (TARGET_CHARACTERISTIC_NOTIFY != null) {
-//            disableNotifications(TARGET_CHARACTERISTIC_NOTIFY!!)
-//        }
         stopScan()
-        delay(10L)
+        delay(10)
         disconnectFromDevice()
-        delay(30)
+        delay(100)
+        bluetoothGatt?.close()
+        delay(100)
 
+        bluetoothGatt = null
+
+
+        logInfo(">>>${bluetoothGatt}  $")
         Log.w(TAG," disableBLEManager !!! ")
         Log.w(TAG," disableBLEManager !!! ")
         Log.w(TAG," disableBLEManager !!! ")
