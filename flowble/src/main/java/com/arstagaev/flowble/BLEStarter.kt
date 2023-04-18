@@ -5,9 +5,11 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.os.Build
 import com.arstagaev.flowble.enums.*
-import com.arstagaev.flowble.enums.Retard
 import com.arstagaev.flowble.extensions.hasPermission
-import com.arstagaev.flowble.gentelman_kit.*
+import com.arstagaev.flowble.gentelman_kit.logAction
+import com.arstagaev.flowble.gentelman_kit.logError
+import com.arstagaev.flowble.gentelman_kit.logWarning
+import com.arstagaev.flowble.gentelman_kit.toast
 import com.arstagaev.flowble.models.CharacterCarrier
 import com.arstagaev.flowble.models.ScannedDevice
 import kotlinx.coroutines.*
@@ -16,13 +18,18 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectIndexed
 
-private var countInitClass = 0
-class BLEStarter(ctx : Context) {
+/**
+ * Created in singleton format - for avoid duplicate bluetooth adapters, scanners and etc.
+ * This class is Entrypoint to whole operations with BLE
+ */
+class BLEStarter private constructor(context: Context) {
 
     private val TAG = "BLEStarter"
     private var bleActions: BleActions? = null
     private var lastSuccess = false
-    private var internalContext: Context? = ctx
+    private val applicationContext: Context = context.applicationContext
+
+
     private var jobBleLifecycle = Job()
 
     var btAdapter: BluetoothAdapter? = null
@@ -34,17 +41,14 @@ class BLEStarter(ctx : Context) {
     init {
         checkPermissions()
         bookingMachine()
-        bleActions = BleActions(internalContext).also {
+        bleActions = BleActions(applicationContext).also {
             it.multiConnect = multiConnect
         }
         btAdapter = bleActions?.btAdapter
 
-        countInitClass++
-        checkNumberOfInstanceThisClass()
     }
 
     private fun bookingMachine() {
-        logAction("START!!")
         CoroutineScope(jobBleLifecycle + CoroutineName("Ble Starter: bookingMachine()")).async {
             bleCommandTrain.collectIndexed { index, operation ->
 
@@ -89,10 +93,9 @@ class BLEStarter(ctx : Context) {
         return if ( bleActions?.btAdapter?.isEnabled == true ) {
             true
         }else {
-            logError("Bluetooth is NOT enabled !!")
-            logError("Bluetooth is NOT enabled !!")
-            logError("Bluetooth is NOT enabled !!")
-            logError("Bluetooth is NOT enabled !!")
+            repeat(5) {
+                logError("Bluetooth is NOT enabled !!")
+            }
             false
         }
     }
@@ -118,7 +121,7 @@ class BLEStarter(ctx : Context) {
             is Connect -> with(operation) {
                 if (showOperationToasts) {
                     CoroutineScope(Dispatchers.Main).launch {
-                        internalContext?.toast("New operation: ${operation}")
+                        applicationContext?.toast("New operation: ${operation}")
                     }
                 }
                 return bleActions?.connectTo(address ?: "")
@@ -169,9 +172,9 @@ class BLEStarter(ctx : Context) {
         //check permissions
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false
-                && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false
-                && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false) {
+            if (applicationContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false
+                && applicationContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false
+                && applicationContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false) {
                 return true
             }else {
 
@@ -179,14 +182,14 @@ class BLEStarter(ctx : Context) {
                 logError("$TAG # Error: Don`t have permission for BLE #")
                 logError("$TAG # Error: Don`t have permission for BLE #")
                 logError("$TAG # Error: Don`t have permission for BLE #")
-                logError(TAG+" # ACCESS_FINE_LOCATION:${internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
-                logError(TAG+" # BLUETOOTH_SCAN:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false} #")
-                logError(TAG+" # BLUETOOTH_CONNECT:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false} #")
+                logError(TAG+" # ACCESS_FINE_LOCATION:${applicationContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
+                logError(TAG+" # BLUETOOTH_SCAN:${applicationContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false} #")
+                logError(TAG+" # BLUETOOTH_CONNECT:${applicationContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false} #")
                 logError("$TAG ########################################")
                 return false
             }
         }else {
-            if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false) {
+            if (applicationContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false) {
 
                 return true
             }else {
@@ -194,7 +197,7 @@ class BLEStarter(ctx : Context) {
                 logError("$TAG # Error: Don`t have permission for BLE #")
                 logError("$TAG # Error: Don`t have permission for BLE #")
                 logError("$TAG # Error: Don`t have permission for BLE #")
-                logError(TAG+ " # ACCESS_FINE_LOCATION:${internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
+                logError(TAG+ " # ACCESS_FINE_LOCATION:${applicationContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false} #")
                 logError("$TAG ########################################")
                 return false
             }
@@ -204,27 +207,12 @@ class BLEStarter(ctx : Context) {
     suspend fun forceStop() {
         if (showOperationToasts) {
             CoroutineScope(Dispatchers.Main).launch {
-                internalContext?.toast("Force Stop")
+                applicationContext?.toast("Force Stop")
             }
         }
         jobBleLifecycle.cancel()
 
         bleActions?.disableBLEManager()
-    }
-
-    /**
-     * Must work only one instance of BLEStarter - for stability of work
-     */
-    private fun checkNumberOfInstanceThisClass() {
-        if (countInitClass > 1) {
-            CoroutineScope(jobBleLifecycle).launch {
-                // set delay for to attract developer`s attention
-                delay(2000)
-                repeat(10) {
-                    logError("WARNING ! Many times (${countInitClass}) initializing of BLEStarter class !! [Possible wrong work of BLE module]. Especially double/triple and etc., request to connect and so on")
-                }
-            }
-        }
     }
 
     companion object {
@@ -237,5 +225,12 @@ class BLEStarter(ctx : Context) {
 
         var servicesCharacteristics   = MutableSharedFlow<MutableList<CharacterCarrier>>(10,0, BufferOverflow.SUSPEND)
 
+        @Volatile
+        private var INSTANCE: BLEStarter? = null
+
+        fun getInstance(context: Context): BLEStarter =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: BLEStarter(context = context).also { INSTANCE = it }
+            }
     }
 }

@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        bleStarter = BLEStarter(this).also {
+        bleStarter = BLEStarter.getInstance(this).also {
             it.showOperationToasts = true // show logs in Toast
         }
 
