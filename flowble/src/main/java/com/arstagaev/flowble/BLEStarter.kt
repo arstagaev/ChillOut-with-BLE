@@ -5,10 +5,9 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.os.Build
 import com.arstagaev.flowble.enums.*
-import com.arstagaev.flowble.enums.DelayOpera
-import com.arstagaev.flowble.gentelman_kit.hasPermission
-import com.arstagaev.flowble.gentelman_kit.logAction
-import com.arstagaev.flowble.gentelman_kit.logError
+import com.arstagaev.flowble.enums.Retard
+import com.arstagaev.flowble.extensions.hasPermission
+import com.arstagaev.flowble.gentelman_kit.*
 import com.arstagaev.flowble.models.CharacterCarrier
 import com.arstagaev.flowble.models.ScannedDevice
 import kotlinx.coroutines.*
@@ -17,50 +16,66 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectIndexed
 
-
+private var countInitClass = 0
 class BLEStarter(ctx : Context) {
 
     private val TAG = "BLEStarter"
-    var bleActions: BleActions? = null
+    private var bleActions: BleActions? = null
     private var lastSuccess = false
     private var internalContext: Context? = ctx
     private var jobBleLifecycle = Job()
-    //private var coroutineContext: Context? = null
+
     var btAdapter: BluetoothAdapter? = null
 
+    //setups:
+    var showOperationToasts = false
+    var multiConnect = false
 
     init {
         checkPermissions()
         bookingMachine()
-        bleActions = BleActions(internalContext)
+        bleActions = BleActions(internalContext).also {
+            it.multiConnect = multiConnect
+        }
         btAdapter = bleActions?.btAdapter
-        isBluetoothEnabled()
+
+        countInitClass++
+        checkNumberOfInstanceThisClass()
     }
 
     private fun bookingMachine() {
         logAction("START!!")
         CoroutineScope(jobBleLifecycle + CoroutineName("Ble Starter: bookingMachine()")).async {
             bleCommandTrain.collectIndexed { index, operation ->
+
                 async {
 
                     operation.forEachIndexed { index, bleOperations ->
-                        // check permissions:
-                        lastSuccess = isBluetoothEnabled()
 
-                        lastSuccess = selector(bleOperations) ?: false
+                        async {
 
-                        if (!lastSuccess && bleOperations.isImportant) {
-                            // force waiting finish of operation
-                            while (!lastSuccess) {
-
-                                if (isBluetoothEnabled()) {
-                                    logAction("repeat: ${bleOperations}")
-                                    lastSuccess = selector(bleOperations) ?: false
-                                }
-
-                                delay(3000)
+                            lastSuccess = selector(bleOperations) ?: run {
+                                logWarning("Operation ${bleOperations.toString()} is Failed !!!")
+                                false
                             }
-                        }
+
+                            if (!lastSuccess && bleOperations.isImportant) {
+                                // force waiting finish of operation
+                                while (!lastSuccess) {
+
+                                    if (isBluetoothEnabled()) {
+                                        logAction("repeat: ${bleOperations}")
+                                        lastSuccess = selector(bleOperations) ?: run {
+                                            logWarning("Operation ${bleOperations.toString()} is Failed Again !!!!")
+                                            false
+                                        }
+                                    }
+
+                                    delay(3000)
+                                }
+                            }
+                        }.await()
+
 
                     }
                     logAction("End of Operation: ${operation.toString()} <<<<")
@@ -72,24 +87,25 @@ class BLEStarter(ctx : Context) {
 
     private fun isBluetoothEnabled(): Boolean {
         return if ( bleActions?.btAdapter?.isEnabled == true ) {
-
             true
         }else {
             logError("Bluetooth is NOT enabled !!")
             logError("Bluetooth is NOT enabled !!")
             logError("Bluetooth is NOT enabled !!")
             logError("Bluetooth is NOT enabled !!")
-
             false
         }
-
     }
 
 
 
-    @Synchronized // really need?
     private suspend fun selector(operation: BleOperation) : Boolean? {
-        logAction("New Operation: ${operation.toString()} >>>>")
+        logAction("New Operation: ${operation} >>>>")
+
+        if (!isBluetoothEnabled()) {
+            delay(200)
+            return false
+        }
 
         when(operation) {
             is StartScan -> with(operation) {
@@ -100,7 +116,11 @@ class BLEStarter(ctx : Context) {
             }
 
             is Connect -> with(operation) {
-
+                if (showOperationToasts) {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        internalContext?.toast("New operation: ${operation}")
+                    }
+                }
                 return bleActions?.connectTo(address ?: "")
             }
             is Disconnect -> with(operation) {
@@ -133,12 +153,13 @@ class BLEStarter(ctx : Context) {
             }
 
 
-            is DisableBleManager -> with(operation) {
-                return bleActions?.disableBLEManager()
-            }
-            is DelayOpera -> with(operation) {
+            is Retard -> with(operation) {
                 delay(duration ?: 0)
                 return true
+            }
+
+            is DisableBleManager -> with(operation) {
+                return bleActions?.disableBLEManager()
             }
         }
         return false
@@ -151,7 +172,6 @@ class BLEStarter(ctx : Context) {
             if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false
                 && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_SCAN)?: false
                 && internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false) {
-
                 return true
             }else {
 
@@ -164,14 +184,12 @@ class BLEStarter(ctx : Context) {
                 logError(TAG+" # BLUETOOTH_CONNECT:${internalContext?.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)?: false} #")
                 logError("$TAG ########################################")
                 return false
-                //REVERT_WORK_CAUSE_PERMISSION = true
             }
         }else {
             if (internalContext?.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)?: false) {
 
                 return true
             }else {
-
                 logError("$TAG ########################################")
                 logError("$TAG # Error: Don`t have permission for BLE #")
                 logError("$TAG # Error: Don`t have permission for BLE #")
@@ -184,8 +202,29 @@ class BLEStarter(ctx : Context) {
     }
 
     suspend fun forceStop() {
+        if (showOperationToasts) {
+            CoroutineScope(Dispatchers.Main).launch {
+                internalContext?.toast("Force Stop")
+            }
+        }
         jobBleLifecycle.cancel()
+
         bleActions?.disableBLEManager()
+    }
+
+    /**
+     * Must work only one instance of BLEStarter - for stability of work
+     */
+    private fun checkNumberOfInstanceThisClass() {
+        if (countInitClass > 1) {
+            CoroutineScope(jobBleLifecycle).launch {
+                // set delay for to attract developer`s attention
+                delay(2000)
+                repeat(10) {
+                    logError("WARNING ! Many times (${countInitClass}) initializing of BLEStarter class !! [Possible wrong work of BLE module]. Especially double/triple and etc., request to connect and so on")
+                }
+            }
+        }
     }
 
     companion object {
@@ -197,5 +236,6 @@ class BLEStarter(ctx : Context) {
         var outputBytesRead           = MutableSharedFlow<CharacterCarrier>(10,0, BufferOverflow.SUSPEND)
 
         var servicesCharacteristics   = MutableSharedFlow<MutableList<CharacterCarrier>>(10,0, BufferOverflow.SUSPEND)
+
     }
 }

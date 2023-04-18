@@ -10,14 +10,11 @@ import com.arstagaev.flowble.BLEStarter.Companion.outputBytesNotifyIndicate
 import com.arstagaev.flowble.BLEStarter.Companion.outputBytesRead
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_CONNECTED
 import com.arstagaev.flowble.BleParameters.ACTION_GATT_DISCONNECTED
-import com.arstagaev.flowble.enums.BleOperations_2
-import com.arstagaev.flowble.gentelman_kit.bytesToHex
-import com.arstagaev.flowble.gentelman_kit.logWarning
+import com.arstagaev.flowble.extensions.printGattTable
 import com.arstagaev.flowble.models.CharacterCarrier
 import com.arstagaev.flowble.models.StateBle
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 open class BleManager(
@@ -57,26 +54,12 @@ open class BleManager(
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             BleParameters.BLE_STATUS = status
-            Log.w("bleble","gatt status:${BleParameters.BLE_STATUS} \n${gatt?.printGattTable()} <<|")
-            arrayListOf<BleOperations_2>(BleOperations_2.DELAY)
+            Log.w("ble","gatt status:${BleParameters.BLE_STATUS} \n${gatt?.printGattTable()} <<|")
 
-            when(status) {
-                //0 ->  { NEED_RESET = false }
-                8  -> {
-                    //toastShow("8!!!8888888!!!",internalContext!!)
-                    //STATE_NOW_SERVICE = StateOfService.LOSS_CONNECTION_AND_WAIT_NEW
-                }
-                19 -> {
-                    //NEED_RESET = true
-                }
-                133 -> {
-                    // unknown error
-                }
-            }
-            gatt
             when(newState) {
                 BluetoothProfile.STATE_DISCONNECTED  -> { Log.w("www", "state:  $newState  STATE_DISCONNECTED  ")
                     BleParameters.STATE_BLE = StateBle.NO_CONNECTED
+                    BleParameters.CONNECTED_DEVICE = null
                     //MSG = "STATE_DISCONNECTED"
                     //generateNameOfAllLogPerSession()
 

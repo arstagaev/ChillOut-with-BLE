@@ -1,7 +1,6 @@
 package com.arstagaev.chilloutble
 
 import android.Manifest
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,18 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.lifecycleScope
 import com.arstagaev.chilloutble.ui.theme.ChillOutBLETheme
 import com.arstagaev.flowble.*
 import com.arstagaev.flowble.enums.*
 import com.arstagaev.flowble.gentelman_kit.bytesToHex
-import com.arstagaev.flowble.gentelman_kit.hasPermission
+import com.arstagaev.flowble.extensions.hasPermission
 import com.arstagaev.flowble.gentelman_kit.logWarning
-import com.arstagaev.flowble.gentelman_kit.requestPermission
+import com.arstagaev.flowble.extensions.requestPermission
 import kotlinx.coroutines.*
 import java.util.*
-import kotlin.coroutines.CoroutineContext
 
 class MainActivity : ComponentActivity() {
 
@@ -35,10 +32,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        bleStarter = BLEStarter(this).also {
+            it.showOperationToasts = true // show logs in Toast
+        }
+
         // here we receive bytes from Notify characteristic:
         CoroutineScope(lifecycleScope.coroutineContext).launch {
             BLEStarter.outputBytesNotifyIndicate.collect {
-                logWarning("Result: ${bytesToHex(it.value!!)}")
+                logWarning("Result: ${bytesToHex(it.value!!)} ${BleParameters.STATE_BLE}")
             }
         }
 
@@ -51,7 +52,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ChillOutBLETheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.White
@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                                     .width(200.dp)
                                     .height(90.dp)
                                     .padding(vertical = 10.dp)
-                                    .clickable { },colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue)
+                                    .clickable { },colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
                                 , onClick = {
 
                                     if (isAllPermissionsEnabled()) {
@@ -94,7 +94,6 @@ class MainActivity : ComponentActivity() {
                                 Text(modifier = Modifier, text = "Stop Chill Out",textAlign = TextAlign.Center, color = Color.White)
                             }
                         }
-
                     }
                 }
             }
@@ -103,23 +102,24 @@ class MainActivity : ComponentActivity() {
 
     // How to use library:
     private fun launchLib() {
-        bleStarter = BLEStarter(this)
-
         CoroutineScope(lifecycleScope.coroutineContext).launch {
             BLEStarter.bleCommandTrain.emit(mutableListOf(
                 StartScan(),
-                DelayOpera(6000L),
-                Connect("44:44:44:44:44:0C", isImportant = true),
+                Retard(6000L),
+                Connect("44:44:44:44:44:0C"),
+                Retard(1000L),
                 StopScan(),
-                ReadFromCharacteristic("44:44:44:44:44:0C",UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
-                EnableNotifications("44:44:44:44:44:0C",UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true),
-                DisableNotifications("44:44:44:44:44:0C", UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"), isImportant = true)
+                ReadFromCharacteristic("44:44:44:44:44:0C", characteristicUuid = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")),
+                Retard(1000L),
+                EnableNotifications("44:44:44:44:44:0C", characteristicUuid = UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8")),
+                Retard(1000L),
+                DisableNotifications("44:44:44:44:44:0C", characteristicUuid = UUID.fromString("beb54202-36e1-4688-b7f5-ea07361b26a8"))
             ))
         }
     }
 
-    fun stopLib() {
-        CoroutineScope(CoroutineName("stop")+ (lifecycleScope.coroutineContext)).launch {
+    private fun stopLib() {
+        CoroutineScope(lifecycleScope.coroutineContext).launch {
             bleStarter?.forceStop()
         }
     }
@@ -143,9 +143,4 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
-    override fun onDestroy() {
-
-        super.onDestroy()
-
-    }
 }

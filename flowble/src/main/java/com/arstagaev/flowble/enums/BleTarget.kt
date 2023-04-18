@@ -11,32 +11,31 @@ abstract class BleOperation() {
 /** Abstract sealed class representing a type of BLE operation */
 sealed class BleTarget : BleOperation() {
     abstract val address: String
-
 }
 
 data class StartScan(
     val scanFilter: ScanFilter? = null,
-    override val isImportant: Boolean = true
+    override val isImportant: Boolean = false
 ) : BleOperation()
 
-data class StopScan(override val isImportant: Boolean = true) : BleOperation()
-
+data class StopScan(override val isImportant: Boolean = false) : BleOperation()
+/** Now work in progress: */
 data class Advertise(val isActive: Boolean? = null, override val isImportant: Boolean = true) : BleOperation()
 
 /** Connect to [device] and perform service discovery */
-data class Connect(override val address: String, override val isImportant: Boolean = false) : BleTarget()
+data class Connect(override val address: String, override val isImportant: Boolean = true) : BleTarget()
 
 /** Disconnect from [device] and release all connection resources */
-data class Disconnect(override val address: String, override val isImportant: Boolean = false) : BleTarget()
+data class Disconnect(override val address: String, override val isImportant: Boolean = true) : BleTarget()
 
-data class DiscoveryServices(override val address: String, override val isImportant: Boolean = false) : BleTarget()
+data class DiscoveryServices(override val address: String, override val isImportant: Boolean = true) : BleTarget()
 
 /** Write [payload] as the value of a characteristic represented by [characteristicUuid] */
 data class WriteToCharacteristic(
     override val address: String,
     val characteristicUuid: UUID,
     val writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT, // ?
-    val payload: ByteArray, override val isImportant: Boolean = false
+    val payload: ByteArray, override val isImportant: Boolean = true
 ) : BleTarget() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -65,47 +64,47 @@ data class WriteToCharacteristic(
 data class ReadFromCharacteristic(
     override val address: String,
     val characteristicUuid: UUID,
-    override val isImportant: Boolean = false
+    override val isImportant: Boolean = true
 ) : BleTarget()
 
 /** Enable notifications/indications on a characteristic represented by [characteristicUuid] */
 data class EnableNotifications(
     override val address: String,
     val characteristicUuid: UUID,
-    override val isImportant: Boolean = false
+    override val isImportant: Boolean = true
 ) : BleTarget()
 
 /** Disable notifications/indications on a characteristic represented by [characteristicUuid] */
 data class DisableNotifications(
     override val address: String,
     val characteristicUuid: UUID,
-    override val isImportant: Boolean = false
+    override val isImportant: Boolean = true
 ) : BleTarget()
 
 /** Request for an MTU of [mtu] */
 data class MtuRequest(
     override val address: String,
     val mtu: Int,
-    override val isImportant: Boolean = false
+    override val isImportant: Boolean = true
 ) : BleTarget()
 
 /** */
 data class GetBatteryLevel(
     override val address: String,
-    override val isImportant: Boolean = false
+    override val isImportant: Boolean = true
 ) : BleTarget()
 
 /** */
 data class UnBondDeviceFromPhone(
     override val address: String,
-    override val isImportant: Boolean = false
+    override val isImportant: Boolean = true
 ) : BleTarget()
 
-/** DelayOpera..tion */
-data class DelayOpera(
+/** retard is delay in French */
+data class Retard(
     val duration: Long, override val isImportant: Boolean = true
 ) : BleOperation()
 
-/** */
+/** Disable work of ble module */
 class DisableBleManager(override val isImportant: Boolean = true) : BleOperation()
 
